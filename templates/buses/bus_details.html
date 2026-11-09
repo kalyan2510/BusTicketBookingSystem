@@ -1,0 +1,193 @@
+{% extends "base.html" %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}{{ schedule.bus.name }} · {{ schedule.route.source }} to {{ schedule.route.destination }} — BUSGO{% endblock %}
+{% block meta_description %}Book {{ schedule.bus.name }} by {{ schedule.bus.operator.name }} from {{ schedule.route.source }} to {{ schedule.route.destination }} on {{ schedule.travel_date|date:"d M Y" }}. Live seat availability on BUSGO.{% endblock %}
+
+{% block content %}
+<section class="page-hero">
+  <div class="container-xxl">
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'buses:home' %}">Home</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'buses:search' %}?from={{ schedule.route.source|urlencode }}&to={{ schedule.route.destination|urlencode }}&date={{ schedule.travel_date|date:'Y-m-d' }}">Search buses</a></li>
+        <li class="breadcrumb-item active" aria-current="page">{{ schedule.route.source }} → {{ schedule.route.destination }}</li>
+      </ol>
+    </nav>
+    <h1>{{ schedule.route.source }} <i class="fa-solid fa-arrow-right text-gold"></i> {{ schedule.route.destination }}</h1>
+    <p>{{ schedule.travel_date|date:"l, d F Y" }} · {{ schedule.bus.operator.name }} · {{ schedule.bus.bus_type }}</p>
+    <div class="hero-pills">
+      <span class="pill pill-glass"><i class="fa-solid fa-clock"></i> {{ schedule.departure_time|time:"H:i" }} departure</span>
+      <span class="pill pill-glass"><i class="fa-solid fa-route"></i> {{ schedule.route.distance_km }} km</span>
+      <span class="pill pill-glass"><i class="fa-solid fa-hourglass-half"></i> {{ schedule.duration_display }}</span>
+      {% if schedule.available_count > 0 %}
+        <span class="pill pill-glass"><i class="fa-solid fa-chair"></i> {{ schedule.available_count }} seats available</span>
+      {% else %}
+        <span class="pill pill-glass"><i class="fa-solid fa-ban"></i> Sold out</span>
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+<section class="detail-wrap">
+  <div class="container-xxl">
+    <div class="detail-grid">
+      <div>
+        <div class="detail-image mb-4">
+          <img src="{{ schedule.bus.image_url }}" alt="{{ schedule.bus.name }}" onerror="this.onerror=null;this.src='{% static 'images/placeholder-bus.svg' %}'">
+          <div class="image-overlay"></div>
+          <div class="image-content">
+            <div>
+              <h1>{{ schedule.bus.name }}</h1>
+              <p><i class="fa-solid fa-bus-simple"></i> {{ schedule.bus.bus_type }} · {{ schedule.bus.registration_number }}</p>
+            </div>
+            <span class="rating-pill"><i class="fa-solid fa-star"></i> {{ schedule.bus.rating }} / 5</span>
+          </div>
+        </div>
+
+        <div class="detail-card">
+          <div class="detail-operator">
+            <img src="{{ schedule.bus.operator.logo_url }}" alt="{{ schedule.bus.operator.name }}" onerror="this.onerror=null;this.src='{% static 'images/logo.svg' %}'">
+            <div>
+              <div class="op-name">{{ schedule.bus.operator.name }}</div>
+              <div class="op-sub"><i class="fa-solid fa-shield-halved text-green"></i> Verified BUSGO partner · {{ schedule.bus.operator.rating }} rating</div>
+            </div>
+          </div>
+          <p class="text-muted fs-14 mb-0">{{ schedule.bus.operator.description|default:"A trusted BUSGO partner operating clean, well-maintained coaches with experienced captains." }}</p>
+        </div>
+
+        <div class="detail-card">
+          <h2><i class="fa-solid fa-clock text-red"></i> Journey schedule</h2>
+          <div class="time-row mb-3">
+            <div class="time-block">
+              <div class="time">{{ schedule.departure_time|time:"H:i" }}</div>
+              <div class="place">{{ schedule.route.source }}</div>
+            </div>
+            <div class="time-mid">
+              <div class="duration">{{ schedule.duration_display }}</div>
+              <div class="time-line"></div>
+              <div class="via">{{ schedule.route.distance_km }} km</div>
+            </div>
+            <div class="time-block text-end">
+              <div class="time">{{ schedule.arrival_time|time:"H:i" }}</div>
+              <div class="place">{{ schedule.route.destination }}</div>
+            </div>
+          </div>
+          <div class="journey-facts">
+            <div class="journey-fact"><div class="lbl">Journey date</div><div class="val">{{ schedule.travel_date|date:"D, d M Y" }}</div></div>
+            <div class="journey-fact"><div class="lbl">Boarding point</div><div class="val">{{ schedule.route.source }} Central Bus Stand</div></div>
+            <div class="journey-fact"><div class="lbl">Dropping point</div><div class="val">{{ schedule.route.destination }} Main Terminal</div></div>
+            <div class="journey-fact"><div class="lbl">Arrival</div><div class="val">{{ schedule.arrival_time|time:"h:i A" }} <small>{% if schedule.arrival_datetime.date != schedule.travel_date %}(next day){% endif %}</small></div></div>
+          </div>
+        </div>
+
+        <div class="detail-card">
+          <h2><i class="fa-solid fa-wand-magic-sparkles text-red"></i> Onboard amenities</h2>
+          <div class="amenity-grid">
+            {% for amenity in schedule.bus.amenities_list %}
+              <div class="amenity-item"><i class="fa-solid fa-circle-check"></i> {{ amenity }}</div>
+            {% empty %}
+              <div class="amenity-item"><i class="fa-solid fa-circle-check"></i> Charging Point</div>
+              <div class="amenity-item"><i class="fa-solid fa-circle-check"></i> Water Bottle</div>
+              <div class="amenity-item"><i class="fa-solid fa-circle-check"></i> Reading Light</div>
+            {% endfor %}
+          </div>
+        </div>
+
+        <div class="detail-card">
+          <h2><i class="fa-solid fa-file-shield text-red"></i> Travel policies</h2>
+          <ul class="policy-list list-unstyled mb-0">
+            <li><i class="fa-solid fa-circle-check"></i><span>Free cancellation up to 24 hours before departure with a 90% refund.</span></li>
+            <li><i class="fa-solid fa-circle-check"></i><span>50% refund for cancellations between 6 and 24 hours before departure.</span></li>
+            <li><i class="fa-solid fa-circle-check"></i><span>Carry a valid photo ID — it is mandatory at boarding.</span></li>
+            <li><i class="fa-solid fa-circle-check"></i><span>Reach the boarding point at least 15 minutes before departure.</span></li>
+            <li><i class="fa-solid fa-circle-check"></i><span>One small cabin bag and one stowed bag are included per passenger.</span></li>
+          </ul>
+        </div>
+
+        <div class="detail-card">
+          <h2><i class="fa-solid fa-star text-gold"></i> Traveller reviews</h2>
+          {% for review in reviews %}
+            <div class="review-mini">
+              <div class="rm-head">
+                <img src="{{ review.user.profile.avatar_url }}" alt="{{ review.user.first_name }}" onerror="this.onerror=null;this.src='{% static 'images/avatar-default.svg' %}'">
+                <div>
+                  <div class="rm-name">{{ review.user.get_full_name|default:review.user.username }}</div>
+                  <div class="rm-stars">
+                    {% for i in "12345"|make_list %}{% if forloop.counter <= review.rating %}<i class="fa-solid fa-star"></i>{% else %}<i class="fa-regular fa-star"></i>{% endif %}{% endfor %}
+                  </div>
+                </div>
+              </div>
+              <p>“{{ review.comment|truncatewords:36 }}”</p>
+            </div>
+          {% empty %}
+            <p class="text-muted fs-14 mb-0">No reviews for this route yet. Complete a journey and be the first to share your experience.</p>
+          {% endfor %}
+        </div>
+      </div>
+
+      <aside>
+        <div class="booking-box">
+          <span class="eyebrow">Fare per seat</span>
+          <div class="d-flex align-items-end justify-content-between gap-2 mb-2">
+            <div class="price-value">₹{{ schedule.fare|floatformat:0|intcomma }} <small>/ seat</small></div>
+            {% if schedule.available_count > 0 %}
+              <span class="seats-left {% if schedule.available_count <= 6 %}low{% else %}ok{% endif %}"><i class="fa-solid fa-chair"></i> {{ schedule.available_count }} left</span>
+            {% else %}
+              <span class="seats-left sold"><i class="fa-solid fa-ban"></i> Sold out</span>
+            {% endif %}
+          </div>
+          <div class="fare-line"><span>Base fare</span><strong>₹{{ schedule.fare|floatformat:2|intcomma }}</strong></div>
+          <div class="fare-line"><span>Convenience fee</span><strong>₹30 / seat</strong></div>
+          <div class="fare-line"><span>GST (5%)</span><strong>Calculated at checkout</strong></div>
+          <div class="fare-total">
+            <span class="lbl">Total per seat</span>
+            <span class="amount">₹{{ schedule.fare|floatformat:0|intcomma }}+</span>
+          </div>
+
+          {% if schedule.is_departed %}
+            <button class="btn btn-outline-navy" type="button" disabled><i class="fa-solid fa-clock-rotate-left"></i> Bus has departed</button>
+            <a href="{% url 'buses:search' %}?from={{ schedule.route.source|urlencode }}&to={{ schedule.route.destination|urlencode }}&date={% now 'Y-m-d' %}" class="btn btn-brand"><i class="fa-solid fa-magnifying-glass"></i> Find another bus</a>
+          {% elif schedule.available_count > 0 %}
+            <a href="{% url 'bookings:seat_selection' schedule.id %}" class="btn btn-brand btn-lg"><i class="fa-solid fa-chair"></i> Select seats</a>
+          {% else %}
+            <button class="btn btn-outline-navy" type="button" disabled><i class="fa-solid fa-ban"></i> Sold out</button>
+            <a href="{% url 'buses:search' %}?from={{ schedule.route.source|urlencode }}&to={{ schedule.route.destination|urlencode }}&date={{ schedule.travel_date|date:'Y-m-d' }}" class="btn btn-brand"><i class="fa-solid fa-magnifying-glass"></i> Other departures</a>
+          {% endif %}
+
+          <div class="trust-row">
+            <span><i class="fa-solid fa-lock"></i> Secure payment</span>
+            <span><i class="fa-solid fa-bolt"></i> Instant ticket</span>
+            <span><i class="fa-solid fa-rotate-left"></i> Easy refunds</span>
+          </div>
+          <div class="auth-note mt-3">
+            <i class="fa-solid fa-circle-info"></i>
+            <span>Seats are held for {{ RESERVATION_MINUTES }} minutes while you complete payment. Up to {{ MAX_SEATS }} seats per booking.</span>
+          </div>
+        </div>
+
+        {% if similar %}
+          <div class="detail-card mt-3">
+            <h2><i class="fa-solid fa-bus text-red"></i> Similar departures</h2>
+            <div class="similar-list">
+              {% for item in similar %}
+                <a class="similar-item" href="{% url 'buses:bus_details' item.id %}">
+                  <div>
+                    <div class="si-time">{{ item.departure_time|time:"H:i" }} · {{ item.travel_date|date:"d M" }}</div>
+                    <div class="si-meta">{{ item.bus.operator.name }} · {{ item.bus.bus_type }}</div>
+                  </div>
+                  <div class="text-end">
+                    <div class="si-price">₹{{ item.fare|floatformat:0 }}</div>
+                    <div class="si-meta">{% if item.available_count %}{{ item.available_count }} seats{% else %}Sold out{% endif %}</div>
+                  </div>
+                </a>
+              {% endfor %}
+            </div>
+          </div>
+        {% endif %}
+      </aside>
+    </div>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,88 @@
+{% extends "dashboard/base_dashboard.html" %}
+{% load humanize %}
+
+{% block title %}Payments{% endblock %}
+{% block page_title %}Payments &amp; refunds{% endblock %}
+{% block page_sub %}Reconcile gateway transactions and track refunds{% endblock %}
+
+{% block content %}
+<div class="dash-page-head">
+  <div>
+    <h1>Payments</h1>
+    <p>{{ page_obj.paginator.count }} transaction{{ page_obj.paginator.count|pluralize }} match this view · filtered value ₹{{ filtered_total|floatformat:0|intcomma }}.</p>
+  </div>
+  <a href="{% url 'dashboard:booking_list' %}" class="btn btn-outline-navy"><i class="fa-solid fa-ticket"></i> Bookings</a>
+</div>
+
+<div class="table-card">
+  <div class="table-toolbar">
+    <h3><i class="fa-solid fa-wallet text-red"></i> Transaction ledger</h3>
+    <form method="get" class="filters">
+      <div class="dash-search">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input type="search" name="q" value="{{ query }}" class="form-control search-input" placeholder="Payment, booking or gateway ID">
+      </div>
+      <select name="status" class="form-select" style="min-width:140px;">
+        <option value="">All statuses</option>
+        {% for value, label in status_choices %}
+          <option value="{{ value }}" {% if status == value %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+      <button class="btn btn-outline-navy btn-sm" type="submit">Filter</button>
+      {% if query or status %}<a href="{% url 'dashboard:payment_list' %}" class="btn btn-outline-navy btn-sm">Reset</a>{% endif %}
+    </form>
+  </div>
+  <div class="table-responsive">
+    <table class="dash-table">
+      <thead>
+        <tr><th>Payment</th><th>Booking</th><th>Method</th><th>Amount</th><th>Status</th><th>Paid at</th><th>Reference</th></tr>
+      </thead>
+      <tbody>
+        {% for payment in page_obj %}
+          <tr>
+            <td>
+              <div class="booking-id-mono">{{ payment.payment_id }}</div>
+              <div class="cell-sub">{{ payment.created_at|date:"d M Y, H:i" }}</div>
+            </td>
+            <td>
+              <a href="{% url 'dashboard:booking_detail' payment.booking.booking_id %}" class="booking-id-mono">{{ payment.booking.booking_id }}</a>
+              <div class="cell-sub">{{ payment.booking.contact_name }}</div>
+            </td>
+            <td>
+              <div class="cell-main">{{ payment.get_method_display }}</div>
+              <div class="cell-sub">{{ payment.get_gateway_display }}</div>
+            </td>
+            <td>
+              <div class="cell-main">₹{{ payment.amount|floatformat:2|intcomma }}</div>
+              {% if payment.refund_amount %}<div class="cell-sub text-red">Refund ₹{{ payment.refund_amount|floatformat:2|intcomma }}</div>{% endif %}
+            </td>
+            <td><span class="status-pill status-{{ payment.status|lower }}">{{ payment.get_status_display }}</span></td>
+            <td>{{ payment.paid_at|date:"d M Y, H:i"|default:"—" }}</td>
+            <td>
+              <div class="cell-sub">{{ payment.gateway_payment_id|default:"—" }}</div>
+              {% if payment.failure_reason %}<div class="cell-sub text-red">{{ payment.failure_reason }}</div>{% endif %}
+            </td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="7"><div class="table-empty"><i class="fa-solid fa-wallet"></i>No payments match your filters.</div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% if page_obj.paginator.num_pages > 1 %}
+    <div class="table-footer">
+      <span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }} · {{ page_obj.paginator.count }} total</span>
+      <nav>
+        <ul class="pagination pagination-sm mb-0">
+          {% if page_obj.has_previous %}<li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query|urlencode }}{% endif %}{% if status %}&status={{ status }}{% endif %}"><i class="fa-solid fa-chevron-left"></i></a></li>{% else %}<li class="page-item disabled"><span class="page-link"><i class="fa-solid fa-chevron-left"></i></span></li>{% endif %}
+          {% for num in page_obj.paginator.page_range %}
+            {% if num == page_obj.number %}<li class="page-item active"><span class="page-link">{{ num }}</span></li>
+            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}<li class="page-item"><a class="page-link" href="?page={{ num }}{% if query %}&q={{ query|urlencode }}{% endif %}{% if status %}&status={{ status }}{% endif %}">{{ num }}</a></li>{% endif %}
+          {% endfor %}
+          {% if page_obj.has_next %}<li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}{% if query %}&q={{ query|urlencode }}{% endif %}{% if status %}&status={{ status }}{% endif %}"><i class="fa-solid fa-chevron-right"></i></a></li>{% else %}<li class="page-item disabled"><span class="page-link"><i class="fa-solid fa-chevron-right"></i></span></li>{% endif %}
+        </ul>
+      </nav>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Payment failed · {{ booking.booking_id }} — BUSGO{% endblock %}
+
+{% block content %}
+<div class="booking-steps-wrap">
+  <div class="container-xxl">
+    <div class="booking-stepper">
+      <div class="step done"><span class="num"><i class="fa-solid fa-check"></i></span><span class="step-label">Seats</span></div>
+      <span class="line"></span>
+      <div class="step done"><span class="num"><i class="fa-solid fa-check"></i></span><span class="step-label">Passengers</span></div>
+      <span class="line"></span>
+      <div class="step active"><span class="num">3</span><span class="step-label">Payment</span></div>
+      <span class="line"></span>
+      <div class="step"><span class="num">4</span><span class="step-label">E-ticket</span></div>
+    </div>
+  </div>
+</div>
+
+<section class="result-section">
+  <div class="container-xxl">
+    <div class="result-card">
+      <div class="result-icon failed"><i class="fa-solid fa-circle-xmark"></i></div>
+      <h1>Payment could not be completed</h1>
+      <p class="result-sub">
+        No money was captured. Your seats are still held for a short time — you can retry payment or choose a different method.
+      </p>
+
+      <div class="result-details">
+        <div class="result-detail"><div class="lbl">Booking ID</div><div class="val">{{ booking.booking_id }}</div></div>
+        <div class="result-detail"><div class="lbl">Amount</div><div class="val">₹{{ booking.total_amount|floatformat:2|intcomma }}</div></div>
+        <div class="result-detail"><div class="lbl">Seats</div><div class="val">{{ booking.seats_summary }}</div></div>
+      </div>
+
+      {% if payment.failure_reason %}
+        <div class="alert alert-danger text-start"><i class="fa-solid fa-circle-info"></i> {{ payment.failure_reason }}</div>
+      {% endif %}
+
+      <div class="result-actions">
+        {% if booking.status == "PENDING" %}
+          <a href="{% url 'payments:checkout' booking.booking_id %}" class="btn btn-brand"><i class="fa-solid fa-rotate-right"></i> Retry payment</a>
+        {% else %}
+          <a href="{% url 'buses:search' %}" class="btn btn-brand"><i class="fa-solid fa-magnifying-glass"></i> Search buses again</a>
+        {% endif %}
+        <a href="{% url 'bookings:my_bookings' %}" class="btn btn-outline-navy"><i class="fa-solid fa-list-check"></i> My bookings</a>
+        <a href="{% url 'contact' %}" class="btn btn-outline-navy"><i class="fa-solid fa-headset"></i> Contact support</a>
+      </div>
+
+      <div class="result-note">
+        <i class="fa-solid fa-shield-halved"></i> If your bank shows a debit, it will be reversed automatically within 5–7 business days. No card or UPI credentials are stored by BUSGO.
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

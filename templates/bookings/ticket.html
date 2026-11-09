@@ -1,0 +1,187 @@
+{% extends "base.html" %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}E-ticket {{ booking.ticket_number|default:booking.booking_id }} — BUSGO{% endblock %}
+
+{% block content %}
+<div class="booking-steps-wrap">
+  <div class="container-xxl">
+    <div class="booking-stepper">
+      <div class="step done"><span class="num"><i class="fa-solid fa-check"></i></span><span class="step-label">Seats</span></div>
+      <span class="line"></span>
+      <div class="step done"><span class="num"><i class="fa-solid fa-check"></i></span><span class="step-label">Passengers</span></div>
+      <span class="line"></span>
+      <div class="step done"><span class="num"><i class="fa-solid fa-check"></i></span><span class="step-label">Payment</span></div>
+      <span class="line"></span>
+      <div class="step active"><span class="num">4</span><span class="step-label">E-ticket</span></div>
+    </div>
+  </div>
+</div>
+
+<section class="ticket-wrap">
+  <div class="container-xxl">
+    <div class="ticket-actions">
+      <div>
+        <h1>Your e-ticket</h1>
+        <p class="text-muted fs-14 mb-0">Show the QR code at boarding. A valid photo ID is mandatory.</p>
+      </div>
+      <div class="d-flex gap-2 flex-wrap no-print">
+        <a href="{% url 'buses:home' %}" class="btn btn-outline-navy btn-sm"><i class="fa-solid fa-house"></i> Back to Home</a>
+        <a href="{% url 'bookings:my_bookings' %}" class="btn btn-outline-navy btn-sm"><i class="fa-solid fa-list-check"></i> Go to My Bookings</a>
+        <button type="button" class="btn btn-outline-navy btn-sm" data-print><i class="fa-solid fa-print"></i> Print Ticket</button>
+        {% if booking.status == "CONFIRMED" %}
+          <a href="{% url 'bookings:ticket_pdf' booking.booking_id %}" class="btn btn-brand btn-sm"><i class="fa-solid fa-file-pdf"></i> Download PDF Ticket</a>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="eticket">
+      <div class="ticket-head">
+        <div class="th-brand">
+          <img src="{% static 'images/logo.svg' %}" alt="BUSGO logo">
+          <span class="brand-text">
+            <span class="brand-name">BUS<span style="color:var(--gold);">GO</span></span>
+            <span class="brand-sub">Your Journey, Our Priority</span>
+          </span>
+        </div>
+        <div class="th-meta">
+          <div class="lbl">E-ticket / boarding pass</div>
+          <div class="val">{{ booking.ticket_number|default:"Pending" }}</div>
+          <div class="ticket-no">Booking {{ booking.booking_id }}</div>
+        </div>
+      </div>
+
+      <div class="ticket-body">
+        {% if booking.status == "CANCELLED" %}
+          <span class="ticket-status-stamp cancelled">CANCELLED</span>
+        {% elif booking.status == "CONFIRMED" %}
+          <span class="ticket-status-stamp">CONFIRMED</span>
+        {% endif %}
+
+        <div class="ticket-route">
+          <div class="ticket-city">
+            <div class="city">{{ booking.journey_source|default:booking.schedule.route.source }}</div>
+            <div class="time">Departure <strong>{{ booking.schedule.departure_time|time:"h:i A" }}</strong></div>
+            <div class="time">{{ booking.journey_date|date:"D, d M Y" }}</div>
+          </div>
+          <div class="ticket-route-mid">
+            <div class="duration">{{ booking.schedule.duration_display }} · {{ booking.schedule.route.distance_km }} km</div>
+            <div class="line"><i class="fa-solid fa-bus-simple"></i></div>
+            <div class="duration mt-1">{{ booking.schedule.bus.operator.name }}</div>
+          </div>
+          <div class="ticket-city text-end">
+            <div class="city">{{ booking.journey_destination|default:booking.schedule.route.destination }}</div>
+            <div class="time">Arrival <strong>{{ booking.schedule.arrival_time|time:"h:i A" }}</strong></div>
+            <div class="time">{% if booking.schedule.arrival_datetime.date != booking.journey_date %}Next day{% else %}Same day{% endif %}</div>
+          </div>
+        </div>
+
+        <div class="ticket-grid">
+          <div class="ticket-field">
+            <div class="lbl">Passenger name</div>
+            <div class="val">{{ booking.contact_name }}<small>{{ booking.contact_phone }}</small></div>
+          </div>
+          <div class="ticket-field">
+            <div class="lbl">Bus</div>
+            <div class="val">{{ booking.schedule.bus.name }}<small>{{ booking.schedule.bus.bus_type }} · {{ booking.schedule.bus.registration_number }}</small></div>
+          </div>
+          <div class="ticket-field">
+            <div class="lbl">Seats</div>
+            <div class="val">{{ booking.seats_summary }}<small>{{ booking.passenger_count }} passenger{{ booking.passenger_count|pluralize }}</small></div>
+          </div>
+          <div class="ticket-field">
+            <div class="lbl">Boarding point</div>
+            <div class="val">{{ booking.journey_source|default:booking.schedule.route.source }}<small>Central Bus Stand · 15 min early</small></div>
+          </div>
+          <div class="ticket-field">
+            <div class="lbl">Booking ID</div>
+            <div class="val">{{ booking.booking_id }}<small>Ticket {{ booking.ticket_number|default:"—" }}</small></div>
+          </div>
+          <div class="ticket-field">
+            <div class="lbl">Payment status</div>
+            <div class="val">
+              {% if booking.status == "CONFIRMED" %}Paid{% elif booking.status == "CANCELLED" %}Refunded{% else %}Unpaid{% endif %}
+              <small>{% if payment %}{{ payment.get_method_display }} · {{ payment.payment_id }}{% else %}No payment recorded{% endif %}</small>
+            </div>
+          </div>
+        </div>
+
+        <table class="ticket-passengers">
+          <thead>
+            <tr><th>Seat</th><th>Passenger</th><th>Age</th><th>Gender</th><th>Status</th></tr>
+          </thead>
+          <tbody>
+            {% for passenger in booking.passengers.all %}
+              <tr>
+                <td class="seat-cell">{{ passenger.seat_number }}</td>
+                <td>{{ passenger.name }}</td>
+                <td>{{ passenger.age }}</td>
+                <td>{{ passenger.gender }}</td>
+                <td>
+                  {% if booking.status == "CONFIRMED" %}
+                    <span class="status-pill status-confirmed">Confirmed</span>
+                  {% else %}
+                    <span class="status-pill status-cancelled">Cancelled</span>
+                  {% endif %}
+                </td>
+              </tr>
+            {% empty %}
+              <tr><td colspan="5" class="text-muted">Passenger details are being prepared.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+
+        <div class="ticket-bottom">
+          <div class="ticket-fare">
+            <div class="tf-line"><span>Seat fare</span><span>₹{{ booking.seat_subtotal|floatformat:2|intcomma }}</span></div>
+            <div class="tf-line"><span>Convenience fee</span><span>₹{{ booking.convenience_fee|floatformat:2|intcomma }}</span></div>
+            <div class="tf-line"><span>GST</span><span>₹{{ booking.gst_amount|floatformat:2|intcomma }}</span></div>
+            <div class="tf-line tf-total"><span>Total paid</span><span>₹{{ booking.total_amount|floatformat:2|intcomma }}</span></div>
+            {% if payment %}
+              <div class="tf-line"><span>{{ payment.get_method_display }}</span><span>{{ payment.payment_id }}</span></div>
+            {% endif %}
+            {% if booking.status == "CANCELLED" and booking.cancellation %}
+              <div class="tf-line text-red"><span>Refund ({{ booking.cancellation.refund_percent }}%)</span><span>₹{{ booking.cancellation.refund_amount|floatformat:2|intcomma }}</span></div>
+            {% endif %}
+          </div>
+
+          <div class="ticket-qr">
+            {% if booking.qr_code %}
+              <img src="{{ booking.qr_code.url }}" alt="QR code to verify ticket {{ booking.ticket_number }}">
+            {% else %}
+              <div style="width:124px;height:124px;border:1px dashed var(--line-strong);border-radius:10px;display:grid;place-items:center;color:var(--muted);">
+                <i class="fa-solid fa-qrcode fa-2x"></i>
+              </div>
+            {% endif %}
+            <div class="qr-label">Scan to verify this ticket</div>
+            {% if booking.ticket_number %}
+              <a class="fs-13" href="{% url 'bookings:verify_ticket' booking.ticket_number %}">Verify online</a>
+            {% endif %}
+          </div>
+        </div>
+
+        {% if booking.status == "CANCELLED" %}
+          <div class="alert alert-warning mt-3 mb-0">
+            <span class="alert-icon"><i class="fa-solid fa-triangle-exclamation"></i></span>
+            <span>This booking was cancelled on {{ booking.cancelled_at|date:"d M Y, H:i" }}. {% if booking.cancellation %}A refund of ₹{{ booking.cancellation.refund_amount|floatformat:2|intcomma }} has been initiated to your original payment method.{% endif %}</span>
+          </div>
+        {% endif %}
+      </div>
+
+      <div class="ticket-perforation"></div>
+
+      <div class="ticket-terms">
+        <div class="tt-item"><i class="fa-solid fa-id-card"></i><span>Carry a valid government photo ID matching the passenger name.</span></div>
+        <div class="tt-item"><i class="fa-solid fa-clock"></i><span>Reach the boarding point at least 15 minutes before departure.</span></div>
+        <div class="tt-item"><i class="fa-solid fa-qrcode"></i><span>This is a computer-generated ticket. Verify authenticity by scanning the QR.</span></div>
+        <div class="ticket-verify-box"><i class="fa-solid fa-shield-halved"></i> Secured by BUSGO</div>
+      </div>
+    </div>
+
+    <div class="text-center mt-4 no-print">
+      <span class="text-muted fs-13"><i class="fa-solid fa-headset"></i> Need help? Call {{ SITE_PHONE }} or email {{ SITE_EMAIL }}</span>
+    </div>
+  </div>
+</section>
+{% endblock %}

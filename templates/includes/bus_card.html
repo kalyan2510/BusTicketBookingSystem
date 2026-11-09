@@ -1,0 +1,49 @@
+{% load static %}
+<article class="bus-card {% if compact %}is-compact{% endif %}">
+  <a href="{% url 'buses:bus_details' schedule.id %}" class="bus-photo" aria-label="View {{ schedule.bus.name }} details">
+    <img src="{{ schedule.bus.image_url }}" alt="{{ schedule.bus.name }} operated by {{ schedule.bus.operator.name }}" loading="lazy" onerror="this.onerror=null;this.src='{% static 'images/placeholder-bus.svg' %}'">
+    <span class="bus-type-badge">{{ schedule.bus.bus_type }}</span>
+  </a>
+  <div class="bus-main">
+    <div class="bus-operator">
+      <img src="{{ schedule.bus.operator.logo_url }}" alt="{{ schedule.bus.operator.name }} logo" class="op-logo" onerror="this.onerror=null;this.src='{% static 'images/logo.svg' %}'">
+      <span class="op-name">{{ schedule.bus.operator.name }}</span>
+      <span class="rating-pill"><i class="fa-solid fa-star"></i> {{ schedule.bus.rating }}</span>
+      {% if schedule.travel_date %}<span class="chip d-none d-sm-inline-flex"><i class="fa-regular fa-calendar"></i> {{ schedule.travel_date|date:"D, d M" }}</span>{% endif %}
+    </div>
+    <h3 class="bus-title"><a href="{% url 'buses:bus_details' schedule.id %}">{{ schedule.bus.name }}</a></h3>
+    <div class="bus-amenities">
+      {% for amenity in schedule.bus.amenities_list|slice:":4" %}
+        <span class="chip"><i class="fa-solid fa-check"></i> {{ amenity }}</span>
+      {% endfor %}
+    </div>
+    <div class="time-row">
+      <div class="time-block">
+        <div class="time">{{ schedule.departure_time|time:"H:i" }}</div>
+        <div class="place">{{ schedule.route.source }}</div>
+      </div>
+      <div class="time-mid">
+        <div class="duration">{{ schedule.duration_display }}</div>
+        <div class="time-line"></div>
+        <div class="via">{{ schedule.route.distance_km }} km</div>
+      </div>
+      <div class="time-block text-end">
+        <div class="time">{{ schedule.arrival_time|time:"H:i" }}</div>
+        <div class="place">{{ schedule.route.destination }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="bus-price-col">
+    <span class="price-label">Starting from</span>
+    <div class="price-value">₹{{ schedule.fare|floatformat:0 }} <small>/seat</small></div>
+    {% if schedule.available_count > 0 %}
+      <div class="seats-left {% if schedule.available_count <= 6 %}low{% else %}ok{% endif %}">
+        <i class="fa-solid fa-chair"></i> {{ schedule.available_count }} seats left
+      </div>
+      <a href="{% url 'bookings:seat_selection' schedule.id %}" class="btn btn-brand btn-sm">View Seats <i class="fa-solid fa-arrow-right"></i></a>
+    {% else %}
+      <div class="seats-left sold"><i class="fa-solid fa-ban"></i> Sold out</div>
+      <button class="btn btn-outline-navy btn-sm" type="button" disabled>Sold out</button>
+    {% endif %}
+  </div>
+</article>

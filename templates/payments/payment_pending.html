@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Payment pending · {{ booking.booking_id }} — BUSGO{% endblock %}
+
+{% block content %}
+<div class="booking-steps-wrap">
+  <div class="container-xxl">
+    <div class="booking-stepper">
+      <div class="step done"><span class="num"><i class="fa-solid fa-check"></i></span><span class="step-label">Seats</span></div>
+      <span class="line"></span>
+      <div class="step done"><span class="num"><i class="fa-solid fa-check"></i></span><span class="step-label">Passengers</span></div>
+      <span class="line"></span>
+      <div class="step active"><span class="num">3</span><span class="step-label">Payment</span></div>
+      <span class="line"></span>
+      <div class="step"><span class="num">4</span><span class="step-label">E-ticket</span></div>
+    </div>
+  </div>
+</div>
+
+<section class="result-section">
+  <div class="container-xxl">
+    <div class="result-card pending">
+      <div class="result-icon pending"><i class="fa-solid fa-hourglass-half"></i></div>
+      <h1>Payment is pending</h1>
+      <p class="result-sub">Your bank or the simulated gateway hasn't confirmed this payment yet. Your seats stay held until the reservation timer expires.</p>
+
+      <div class="result-details">
+        <div class="result-detail"><div class="lbl">Booking ID</div><div class="val">{{ booking.booking_id }}</div></div>
+        <div class="result-detail"><div class="lbl">Amount</div><div class="val">₹{{ booking.total_amount|floatformat:2|intcomma }}</div></div>
+        <div class="result-detail"><div class="lbl">Status</div><div class="val">{{ booking.get_status_display }}</div></div>
+      </div>
+
+      <div class="result-actions">
+        {% if booking.status == "PENDING" %}
+          <a href="{% url 'payments:checkout' booking.booking_id %}" class="btn btn-brand"><i class="fa-solid fa-rotate-right"></i> Check / retry payment</a>
+        {% endif %}
+        <a href="{% url 'bookings:my_bookings' %}" class="btn btn-outline-navy"><i class="fa-solid fa-list-check"></i> My bookings</a>
+      </div>
+
+      <div class="result-note">
+        <i class="fa-regular fa-clock"></i> Pending payments are reconciled automatically. If the hold expires, the seats are released and any failed payment is marked accordingly.
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

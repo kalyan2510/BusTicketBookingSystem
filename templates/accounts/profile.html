@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}My profile — BUSGO{% endblock %}
+
+{% block content %}
+<section class="page-hero">
+  <div class="container-xxl">
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'buses:home' %}">Home</a></li>
+        <li class="breadcrumb-item active" aria-current="page">My profile</li>
+      </ol>
+    </nav>
+    <h1>My profile</h1>
+    <p>Keep your traveller details up to date for faster checkout and accurate e-tickets.</p>
+  </div>
+</section>
+
+<section class="bookings-wrap">
+  <div class="container-xxl">
+    <div class="row g-4">
+      <div class="col-lg-4">
+        <div class="panel mb-4">
+          <div class="panel-body text-center">
+            <img src="{{ profile.avatar_url }}" alt="{{ profile.display_name }} avatar" class="rounded-circle mb-3" style="width:96px;height:96px;object-fit:cover;border:4px solid #fff;box-shadow:var(--shadow-sm);" onerror="this.onerror=null;this.src='{% static 'images/avatar-default.svg' %}'">
+            <h2 class="h5 mb-1">{{ profile.display_name }}</h2>
+            <p class="text-muted fs-14 mb-2">{{ user.email|default:user.username }}</p>
+            <span class="pill pill-green"><i class="fa-solid fa-circle-check"></i> Verified traveller</span>
+            <div class="divider"></div>
+            <div class="detail-list text-start">
+              <div class="row-line"><span>Phone</span><span>{{ profile.phone|default:"Not added" }}</span></div>
+              <div class="row-line"><span>City</span><span>{{ profile.city|default:"Not added" }}</span></div>
+              <div class="row-line"><span>Member since</span><span>{{ profile.created_at|date:"d M Y" }}</span></div>
+            </div>
+            <a href="{% url 'bookings:my_bookings' %}" class="btn btn-outline-navy w-100 mt-3">
+              <i class="fa-solid fa-ticket"></i> My bookings
+            </a>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head"><h3>Traveller snapshot</h3></div>
+          <div class="panel-body">
+            <div class="dash-stats" style="grid-template-columns:1fr 1fr;">
+              <div class="dash-stat">
+                <div class="ds-icon" style="background:var(--navy);color:#fff;"><i class="fa-solid fa-ticket"></i></div>
+                <div><div class="ds-num">{{ stats.total|default:0 }}</div><div class="ds-lbl">Total bookings</div></div>
+              </div>
+              <div class="dash-stat">
+                <div class="ds-icon" style="background:var(--green-soft);color:var(--green);"><i class="fa-solid fa-check"></i></div>
+                <div><div class="ds-num">{{ stats.confirmed|default:0 }}</div><div class="ds-lbl">Confirmed trips</div></div>
+              </div>
+              <div class="dash-stat">
+                <div class="ds-icon" style="background:var(--red-soft);color:var(--red);"><i class="fa-solid fa-ban"></i></div>
+                <div><div class="ds-num">{{ stats.cancelled|default:0 }}</div><div class="ds-lbl">Cancelled</div></div>
+              </div>
+              <div class="dash-stat">
+                <div class="ds-icon" style="background:var(--gold-soft);color:#9a7200;"><i class="fa-solid fa-indian-rupee-sign"></i></div>
+                <div><div class="ds-num">₹{{ stats.spent|default:0|floatformat:0|intcomma }}</div><div class="ds-lbl">Total spent</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-8">
+        <div class="form-card">
+          <h2>Account details</h2>
+          <p class="card-sub">These details pre-fill your passenger and contact information at checkout.</p>
+
+          <form method="post" enctype="multipart/form-data" novalidate>
+            {% csrf_token %}
+            {% if form.non_field_errors %}
+              <div class="alert alert-danger">{{ form.non_field_errors.0 }}</div>
+            {% endif %}
+
+            <div class="form-grid">
+              <div>
+                <label class="form-label" for="{{ form.first_name.id_for_label }}">First name</label>
+                {{ form.first_name }}
+                {% if form.first_name.errors %}<div class="invalid-feedback d-block">{{ form.first_name.errors.0 }}</div>{% endif %}
+              </div>
+              <div>
+                <label class="form-label" for="{{ form.last_name.id_for_label }}">Last name</label>
+                {{ form.last_name }}
+                {% if form.last_name.errors %}<div class="invalid-feedback d-block">{{ form.last_name.errors.0 }}</div>{% endif %}
+              </div>
+              <div>
+                <label class="form-label" for="{{ form.email.id_for_label }}">Email address</label>
+                {{ form.email }}
+                {% if form.email.errors %}<div class="invalid-feedback d-block">{{ form.email.errors.0 }}</div>{% endif %}
+              </div>
+              <div>
+                <label class="form-label" for="{{ form.phone.id_for_label }}">Mobile number</label>
+                {{ form.phone }}
+                {% if form.phone.errors %}<div class="invalid-feedback d-block">{{ form.phone.errors.0 }}</div>{% endif %}
+              </div>
+              <div>
+                <label class="form-label" for="{{ form.city.id_for_label }}">City</label>
+                {{ form.city }}
+                {% if form.city.errors %}<div class="invalid-feedback d-block">{{ form.city.errors.0 }}</div>{% endif %}
+              </div>
+              <div>
+                <label class="form-label" for="{{ form.avatar.id_for_label }}">Profile photo</label>
+                {{ form.avatar }}
+                <div class="form-text">JPG or PNG, up to 2 MB. A default avatar is used if empty.</div>
+                {% if form.avatar.errors %}<div class="invalid-feedback d-block">{{ form.avatar.errors.0 }}</div>{% endif %}
+              </div>
+            </div>
+
+            <div class="d-flex gap-2 flex-wrap mt-4">
+              <button type="submit" class="btn btn-brand"><i class="fa-solid fa-floppy-disk"></i> Save changes</button>
+              <a href="{% url 'accounts:password_reset' %}" class="btn btn-outline-navy"><i class="fa-solid fa-key"></i> Change password</a>
+            </div>
+          </form>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <div><h3>Recent bookings</h3><p>Your last five journeys at a glance.</p></div>
+            <a href="{% url 'bookings:my_bookings' %}" class="btn btn-sm btn-outline-navy">View all</a>
+          </div>
+          <div class="table-responsive">
+            <table class="dash-table">
+              <thead>
+                <tr><th>Booking</th><th>Route</th><th>Journey</th><th>Status</th><th class="text-end">Amount</th></tr>
+              </thead>
+              <tbody>
+                {% for booking in recent_bookings %}
+                  <tr>
+                    <td>
+                      <a class="cell-main" href="{% url 'bookings:detail' booking.booking_id %}">{{ booking.booking_id }}</a>
+                      <div class="cell-sub">{{ booking.created_at|date:"d M Y" }}</div>
+                    </td>
+                    <td>{{ booking.route_text }}</td>
+                    <td>{{ booking.journey_date|date:"d M Y" }}<div class="cell-sub">{{ booking.schedule.departure_time|time:"H:i" }}</div></td>
+                    <td><span class="status-pill status-{{ booking.status|lower }}">{{ booking.get_status_display }}</span></td>
+                    <td class="text-end fw-600">₹{{ booking.total_amount|floatformat:0|intcomma }}</td>
+                  </tr>
+                {% empty %}
+                  <tr><td colspan="5"><div class="table-empty"><i class="fa-regular fa-folder-open"></i>No bookings yet. <a href="{% url 'buses:search' %}">Search buses</a> to plan your first trip.</div></td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

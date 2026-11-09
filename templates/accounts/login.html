@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Sign in to BUSGO — Your journey, our priority{% endblock %}
+{% block meta_description %}Sign in to BUSGO to manage bookings, download e-tickets and book your next bus journey.{% endblock %}
+
+{% block content %}
+<section class="auth-section">
+  <div class="container-xxl">
+    <div class="auth-card">
+      <div class="auth-visual">
+        <div class="auth-brand">
+          <img src="{% static 'images/logo.svg' %}" alt="BUSGO logo">
+          <span class="brand-text">
+            <span class="brand-name">BUS<span style="color:var(--gold);">GO</span></span>
+            <span class="brand-sub">Online Bus Booking</span>
+          </span>
+        </div>
+        <div class="auth-quote">
+          <div class="quote-mark"><i class="fa-solid fa-quote-left"></i></div>
+          <h3>Welcome back. Your seat is waiting.</h3>
+          <p>Pick up where you left off — view upcoming journeys, download tickets and manage every trip in one place.</p>
+          <div class="auth-features">
+            <span><i class="fa-solid fa-check"></i> Live seat availability on every route</span>
+            <span><i class="fa-solid fa-check"></i> Instant QR and PDF e-tickets</span>
+            <span><i class="fa-solid fa-check"></i> Easy cancellations with automatic refunds</span>
+            <span><i class="fa-solid fa-check"></i> 24×7 human travel support</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="auth-form">
+        <div class="auth-form-head">
+          <span class="eyebrow">Traveller login</span>
+          <h2>Sign in to BUSGO</h2>
+          <p>New here? <a href="{% url 'accounts:register' %}{% if next %}?next={{ next|urlencode }}{% endif %}">Create a free account</a></p>
+        </div>
+
+        {% if form.non_field_errors %}
+          <div class="alert alert-danger" role="alert">
+            <span class="alert-icon"><i class="fa-solid fa-circle-exclamation"></i></span>
+            <span>{{ form.non_field_errors.0 }}</span>
+          </div>
+        {% endif %}
+
+        <form method="post" action="{% url 'accounts:login' %}" novalidate>
+          {% csrf_token %}
+          {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+
+          <div class="mb-3">
+            <label class="form-label" for="{{ form.username.id_for_label }}">Email or username</label>
+            <div class="input-icon">
+              <i class="fa-regular fa-envelope"></i>
+              {{ form.username }}
+            </div>
+            {% if form.username.errors %}<div class="invalid-feedback d-block">{{ form.username.errors.0 }}</div>{% endif %}
+          </div>
+
+          <div class="mb-2">
+            <label class="form-label" for="{{ form.password.id_for_label }}">Password</label>
+            <div class="password-wrap">
+              <div class="input-icon">
+                <i class="fa-solid fa-lock"></i>
+                {{ form.password }}
+              </div>
+              <button type="button" class="toggle-password" data-toggle-password="#id_login_password" aria-label="Show password">
+                <i class="fa-regular fa-eye"></i>
+              </button>
+            </div>
+            {% if form.password.errors %}<div class="invalid-feedback d-block">{{ form.password.errors.0 }}</div>{% endif %}
+          </div>
+
+          <div class="auth-extra">
+            <div class="form-check">
+              {{ form.remember_me }}
+              <label class="form-check-label" for="{{ form.remember_me.id_for_label }}">Remember me for 14 days</label>
+            </div>
+            <a href="{% url 'accounts:password_reset' %}">Forgot password?</a>
+          </div>
+
+          <button type="submit" class="btn btn-brand btn-lg">
+            <i class="fa-solid fa-right-to-bracket"></i> Sign in securely
+          </button>
+
+          <div class="auth-divider">or try the demo</div>
+          <div class="auth-note">
+            <i class="fa-solid fa-circle-info"></i>
+            <span>
+              <strong>Demo traveller:</strong> demo@busgo.com / Demo@12345<br>
+              <strong>Admin:</strong> admin@busgo.com / Admin@12345
+            </span>
+          </div>
+        </form>
+
+        <p class="auth-footer-text">
+          By signing in you agree to our <a href="{% url 'policies' %}#terms">Terms</a> and
+          <a href="{% url 'policies' %}#privacy">Privacy Policy</a>.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

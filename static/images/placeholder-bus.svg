@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#12315F"/><stop offset="1" stop-color="#081C36"/>
+    </linearGradient>
+    <linearGradient id="bus" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#E63946"/><stop offset="1" stop-color="#B80F1D"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="500" fill="url(#sky)"/>
+  <circle cx="650" cy="110" r="55" fill="#F4B400" opacity=".25"/>
+  <path d="M0 390h800v110H0z" fill="#050F1E"/>
+  <path d="M0 390h800v8H0z" fill="#F4B400" opacity=".5"/>
+  <g transform="translate(170 170)">
+    <rect x="0" y="60" width="460" height="160" rx="28" fill="url(#bus)"/>
+    <rect x="25" y="85" width="410" height="65" rx="10" fill="#0B1F3A"/>
+    <rect x="40" y="98" width="90" height="38" rx="6" fill="#8FB6E8"/>
+    <rect x="145" y="98" width="90" height="38" rx="6" fill="#8FB6E8"/>
+    <rect x="250" y="98" width="90" height="38" rx="6" fill="#8FB6E8"/>
+    <rect x="355" y="98" width="65" height="38" rx="6" fill="#8FB6E8"/>
+    <rect x="30" y="165" width="400" height="10" rx="5" fill="#F4B400" opacity=".7"/>
+    <circle cx="95" cy="228" r="34" fill="#081C36"/><circle cx="95" cy="228" r="13" fill="#F4B400"/>
+    <circle cx="365" cy="228" r="34" fill="#081C36"/><circle cx="365" cy="228" r="13" fill="#F4B400"/>
+    <rect x="430" y="95" width="20" height="55" rx="8" fill="#fff"/>
+  </g>
+  <text x="400" y="455" text-anchor="middle" font-family="Arial, sans-serif" font-size="22" fill="#8FB6E8">BUSGO · Your Journey, Our Priority</text>
+</svg>

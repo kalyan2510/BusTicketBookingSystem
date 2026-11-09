@@ -1,0 +1,154 @@
+{% extends "base.html" %}
+
+{% block title %}Policies &amp; Terms — BUSGO{% endblock %}
+{% block meta_description %}Read BUSGO's booking, cancellation, refund, payment, privacy and terms of service policies in plain language.{% endblock %}
+
+{% block content %}
+<section class="page-hero">
+  <div class="container-xxl">
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'buses:home' %}">Home</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Policies</li>
+      </ol>
+    </nav>
+    <span class="eyebrow" style="color:var(--gold);">The fine print, made simple</span>
+    <h1>Policies &amp; terms</h1>
+    <p>Everything you agree to when you book with BUSGO — written without the legalese. Last updated {{ CURRENT_YEAR }}.</p>
+    <div class="hero-pills">
+      <span class="pill pill-white"><i class="fa-solid fa-shield-halved"></i> Secure by design</span>
+      <span class="pill pill-white"><i class="fa-solid fa-rotate-left"></i> Transparent refunds</span>
+      <span class="pill pill-white"><i class="fa-solid fa-lock"></i> Privacy first</span>
+    </div>
+  </div>
+</section>
+
+<section class="section-sm">
+  <div class="container-xxl">
+    <div class="row g-4">
+      <div class="col-lg-3">
+        <nav class="policy-nav" aria-label="Policy sections">
+          <div class="fw-700 text-navy mb-2 fs-13 text-uppercase" style="letter-spacing:.08em;">On this page</div>
+          <a href="#booking"><i class="fa-solid fa-ticket me-2"></i>Booking &amp; seat holds</a>
+          <a href="#payments"><i class="fa-solid fa-wallet me-2"></i>Payments</a>
+          <a href="#cancellation"><i class="fa-solid fa-ban me-2"></i>Cancellation</a>
+          <a href="#refunds"><i class="fa-solid fa-rotate-left me-2"></i>Refunds</a>
+          <a href="#travel"><i class="fa-solid fa-bus-simple me-2"></i>Travel &amp; boarding</a>
+          <a href="#terms"><i class="fa-solid fa-file-contract me-2"></i>Terms of service</a>
+          <a href="#privacy"><i class="fa-solid fa-user-shield me-2"></i>Privacy policy</a>
+          <a href="#contact"><i class="fa-solid fa-headset me-2"></i>Contact &amp; help</a>
+        </nav>
+      </div>
+
+      <div class="col-lg-9">
+        <article class="policy-card" id="booking">
+          <span class="eyebrow">01 · Booking</span>
+          <h2>Booking &amp; seat holds</h2>
+          <p>When you select seats, BUSGO places a temporary hold on them for <strong>{{ reservation_minutes }} minutes</strong> while you complete passenger details and payment. This prevents two travellers paying for the same seat.</p>
+          <ul class="policy-list">
+            <li><i class="fa-solid fa-circle-check"></i><span>You can book up to <strong>{{ max_seats }} seats</strong> in a single reservation.</span></li>
+            <li><i class="fa-solid fa-circle-check"></i><span>Seats are only confirmed after successful payment and server-side verification.</span></li>
+            <li><i class="fa-solid fa-circle-check"></i><span>If payment is not completed in time, the hold expires automatically and the seats return to sale.</span></li>
+            <li><i class="fa-solid fa-circle-check"></i><span>Passenger names must match a valid government photo ID carried during travel.</span></li>
+            <li><i class="fa-solid fa-circle-check"></i><span>A confirmed e-ticket with a unique ticket number and QR code is issued instantly.</span></li>
+          </ul>
+        </article>
+
+        <article class="policy-card" id="payments">
+          <span class="eyebrow">02 · Payments</span>
+          <h2>Payments &amp; security</h2>
+          <p>BUSGO supports UPI, Google Pay, PhonePe, Paytm, QR, debit card, credit card and net banking. In this deployment the default gateway is a clearly-labelled <strong>simulated gateway</strong> for demonstration; Razorpay test mode can be enabled by an administrator.</p>
+          <ul class="policy-list">
+            <li><i class="fa-solid fa-lock"></i><span>We <strong>never store</strong> your card number, CVV, UPI PIN or banking password.</span></li>
+            <li><i class="fa-solid fa-lock"></i><span>All payment results are verified on the server before a booking is confirmed.</span></li>
+            <li><i class="fa-solid fa-lock"></i><span>Fares include a per-seat convenience fee and applicable GST, both shown before you pay.</span></li>
+            <li><i class="fa-solid fa-lock"></i><span>Payment records are retained for accounting, dispute resolution and refund processing.</span></li>
+          </ul>
+        </article>
+
+        <article class="policy-card" id="cancellation">
+          <span class="eyebrow">03 · Cancellation</span>
+          <h2>Cancellation policy</h2>
+          <p>Cancellations are calculated from the scheduled departure time and applied automatically. The refund percentage is based on the total amount paid.</p>
+          <div class="table-responsive mt-3">
+            <table class="table table-bordered align-middle mb-0" style="font-size:.86rem;">
+              <thead class="table-light"><tr><th>When you cancel</th><th>Refund</th><th>Retained as cancellation fee</th></tr></thead>
+              <tbody>
+                <tr><td>24 hours or more before departure</td><td><strong class="text-green">90%</strong></td><td>10%</td></tr>
+                <tr><td>Between 6 and 24 hours before departure</td><td><strong class="text-gold">50%</strong></td><td>50%</td></tr>
+                <tr><td>Less than 6 hours before departure</td><td><strong class="text-red">Not permitted</strong></td><td>—</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <ul class="policy-list mt-3">
+            <li><i class="fa-solid fa-circle-info"></i><span>You can cancel from <a href="{% url 'bookings:my_bookings' %}">My bookings</a> while the booking is upcoming and eligible.</span></li>
+            <li><i class="fa-solid fa-circle-info"></i><span>Completed, expired or already-cancelled bookings cannot be cancelled again.</span></li>
+            <li><i class="fa-solid fa-circle-info"></i><span>If an operator cancels a trip, you receive a full refund regardless of the timeline above.</span></li>
+          </ul>
+        </article>
+
+        <article class="policy-card" id="refunds">
+          <span class="eyebrow">04 · Refunds</span>
+          <h2>Refund policy</h2>
+          <p>Approved refunds are initiated automatically to your original payment method as soon as the cancellation is processed.</p>
+          <ul class="policy-list">
+            <li><i class="fa-solid fa-clock"></i><span>UPI and wallet refunds usually arrive within <strong>3–5 working days</strong>.</span></li>
+            <li><i class="fa-solid fa-clock"></i><span>Card and net-banking refunds can take <strong>5–7 working days</strong> depending on your bank.</span></li>
+            <li><i class="fa-solid fa-clock"></i><span>Convenience fees are refunded only when BUSGO or the operator cancels the trip.</span></li>
+            <li><i class="fa-solid fa-clock"></i><span>You will see the refund amount and status against the booking in your dashboard.</span></li>
+          </ul>
+        </article>
+
+        <article class="policy-card" id="travel">
+          <span class="eyebrow">05 · Travel</span>
+          <h2>Travel &amp; boarding rules</h2>
+          <ul class="policy-list">
+            <li><i class="fa-solid fa-id-card"></i><span>Carry a valid photo ID matching the lead passenger's name. Operators may deny boarding without it.</span></li>
+            <li><i class="fa-solid fa-clock"></i><span>Report at the boarding point at least <strong>15 minutes</strong> before departure. Missed buses are non-refundable.</span></li>
+            <li><i class="fa-solid fa-ban"></i><span>Alcohol, smoking, and prohibited substances are not allowed on any BUSGO service.</span></li>
+            <li><i class="fa-solid fa-briefcase"></i><span>Luggage allowances are set by the operator; valuables should be carried with you.</span></li>
+            <li><i class="fa-solid fa-child"></i><span>Children above 5 years require their own seat and ticket.</span></li>
+          </ul>
+        </article>
+
+        <article class="policy-card" id="terms">
+          <span class="eyebrow">06 · Terms</span>
+          <h2>Terms of service</h2>
+          <p>By using BUSGO you agree to provide accurate information, use the platform lawfully, and not attempt to disrupt seat inventory, payments or other travellers' bookings.</p>
+          <ul class="policy-list">
+            <li><i class="fa-solid fa-circle-check"></i><span>BUSGO acts as a booking platform connecting travellers with independent bus operators.</span></li>
+            <li><i class="fa-solid fa-circle-check"></i><span>Schedules, amenities and vehicle type are provided by operators and may change due to operational needs.</span></li>
+            <li><i class="fa-solid fa-circle-check"></i><span>Fraudulent bookings, chargebacks or automated abuse may result in account suspension.</span></li>
+            <li><i class="fa-solid fa-circle-check"></i><span>These terms are governed by the laws of India, with jurisdiction in Bengaluru, Karnataka.</span></li>
+          </ul>
+        </article>
+
+        <article class="policy-card" id="privacy">
+          <span class="eyebrow">07 · Privacy</span>
+          <h2>Privacy policy</h2>
+          <p>We collect only what is needed to issue tickets, process payments and support your journey: your name, email, phone, passenger details and booking history.</p>
+          <ul class="policy-list">
+            <li><i class="fa-solid fa-user-shield"></i><span>We do not sell your personal data. Ever.</span></li>
+            <li><i class="fa-solid fa-user-shield"></i><span>Data is shared with the operating bus company only to the extent required for your trip.</span></li>
+            <li><i class="fa-solid fa-user-shield"></i><span>Passwords are stored using Django's salted hashing; payment credentials are never stored.</span></li>
+            <li><i class="fa-solid fa-user-shield"></i><span>You may request access, correction or deletion of your account data by contacting support.</span></li>
+            <li><i class="fa-solid fa-user-shield"></i><span>Cookies are used for login sessions and essential site functionality only.</span></li>
+          </ul>
+        </article>
+
+        <article class="policy-card mb-0" id="contact">
+          <span class="eyebrow">08 · Help</span>
+          <h2>Contact &amp; help</h2>
+          <p>Questions about a booking, refund or policy? Our support team is available 24×7.</p>
+          <div class="row g-3 mt-1">
+            <div class="col-md-4"><div class="detail-block"><div class="lbl">Email</div><div class="val"><a href="mailto:{{ SITE_EMAIL }}">{{ SITE_EMAIL }}</a></div></div></div>
+            <div class="col-md-4"><div class="detail-block"><div class="lbl">Phone</div><div class="val"><a href="tel:{{ SITE_PHONE|cut:' ' }}">{{ SITE_PHONE }}</a></div></div></div>
+            <div class="col-md-4"><div class="detail-block"><div class="lbl">Office</div><div class="val fs-13">{{ SITE_ADDRESS }}</div></div></div>
+          </div>
+          <a href="{% url 'contact' %}" class="btn btn-brand mt-3"><i class="fa-solid fa-envelope"></i> Contact support</a>
+        </article>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

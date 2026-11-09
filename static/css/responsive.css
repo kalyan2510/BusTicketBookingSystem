@@ -1,0 +1,207 @@
+/* ==========================================================================
+   BUSGO — Responsive refinements
+   ========================================================================== */
+
+@media (max-width: 1199.98px) {
+  .bus-card { grid-template-columns: 176px minmax(0, 1fr) 172px; gap: 16px; }
+  .bus-photo { min-height: 164px; }
+  .hero-grid { gap: 36px; }
+  .search-card { padding: 24px; }
+  .detail-grid { grid-template-columns: minmax(0, 1fr) 340px; }
+  .seat-layout { grid-template-columns: minmax(0, 1fr) 340px; }
+  .flow-layout { grid-template-columns: minmax(0, 1fr) 350px; }
+  .featured-grid { gap: 16px; }
+}
+
+@media (max-width: 991.98px) {
+  :root { --header-h: 74px; }
+  .section { padding: 64px 0; }
+  .topbar-left .hide-md, .topbar-social { display: none !important; }
+  .site-header .navbar-collapse {
+    margin-top: .7rem;
+    border-top: 1px solid var(--line);
+    padding-top: .8rem;
+    max-height: calc(100vh - 140px);
+    overflow-y: auto;
+  }
+  .navbar-nav .nav-link { padding: .6rem .2rem !important; }
+  .navbar-nav .nav-link::after { left: .2rem; right: auto; width: 26px; }
+  .nav-actions { margin: .8rem 0 .4rem; padding-top: .8rem; border-top: 1px solid var(--line); flex-wrap: wrap; }
+  .nav-actions .btn { flex: 1; }
+  .profile-toggle { width: 100%; justify-content: flex-start; }
+  .hero { padding: 58px 0 120px; }
+  .hero-grid { grid-template-columns: 1fr; gap: 34px; }
+  .hero h1 { max-width: 720px; }
+  .hero-sub { max-width: 620px; }
+  .search-card { max-width: 640px; }
+  .stats-card { grid-template-columns: 1fr 1fr; gap: 10px 0; }
+  .stat-item { border-right: 0; }
+  .stat-item:nth-child(odd) { border-right: 1px solid var(--line); }
+  .route-grid, .offers-grid, .reviews-grid, .feature-grid { grid-template-columns: 1fr 1fr; }
+  .featured-grid { grid-template-columns: 1fr; }
+  .steps-grid { grid-template-columns: 1fr 1fr; gap: 28px; }
+  .steps-grid::before { display: none; }
+  .auth-card { grid-template-columns: 1fr; }
+  .auth-visual { min-height: 340px; padding: 26px; }
+  .auth-visual .auth-quote { max-width: 520px; }
+  .auth-visual .auth-quote h3 { font-size: 1.3rem; }
+  .auth-features { display: none; }
+  .auth-form { padding: 38px 34px 42px; }
+  .search-bar-card { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .search-bar-card .search-row { display: contents; }
+  .search-bar-card .swap-btn { display: none; }
+  .search-bar-card .btn { grid-column: 1 / -1; }
+  .results-layout { grid-template-columns: 1fr; }
+  .filter-card { position: static; display: none; margin-bottom: 18px; }
+  .filter-card.show { display: block; animation: fadeUp .3s ease; }
+  .filter-toggle-btn { display: inline-flex; }
+  .detail-grid { grid-template-columns: 1fr; }
+  .booking-box { position: static; }
+  .seat-layout { grid-template-columns: 1fr; }
+  .summary-card { position: static; }
+  .flow-layout { grid-template-columns: 1fr; }
+  .summary-card { position: static; }
+  .dash-stats { grid-template-columns: 1fr 1fr; }
+  .booking-detail-grid { grid-template-columns: 1fr; }
+  .ticket-grid { grid-template-columns: 1fr 1fr; }
+  .cta-band { padding: 40px; }
+  .cta-band::before { opacity: .14; }
+  .footer-about { max-width: 100%; }
+  .site-footer { margin-top: 64px; }
+}
+
+@media (max-width: 767.98px) {
+  .section { padding: 52px 0; }
+  .section-head { margin-bottom: 26px; }
+  .topbar { font-size: .7rem; }
+  .topbar-inner { justify-content: center; }
+  .topbar-left { gap: 12px; }
+  .hero { padding: 44px 0 108px; }
+  .hero h1 { font-size: clamp(2.3rem, 10vw, 3.1rem); }
+  .hero-sub { font-size: .96rem; }
+  .hero-route-chips .label { width: 100%; }
+  .search-card { padding: 20px; border-radius: var(--radius-lg); }
+  .search-row { grid-template-columns: 1fr; gap: 12px; }
+  .swap-btn { display: none; }
+  .stats-strip { margin-top: -56px; }
+  .stats-card { padding: 16px 10px; }
+  .stat-item { padding: 8px 10px; gap: 9px; }
+  .stat-icon { width: 40px; height: 40px; border-radius: 11px; font-size: .95rem; }
+  .stat-number { font-size: 1.35rem; }
+  .stat-label { font-size: .64rem; }
+  .route-grid, .offers-grid, .reviews-grid, .feature-grid { grid-template-columns: 1fr; }
+  .route-card { height: 230px; }
+  .bus-card { grid-template-columns: 1fr; padding: 14px; gap: 14px; }
+  .bus-photo { min-height: 190px; }
+  .bus-price-col { border-left: 0; border-top: 1px dashed var(--line); padding: 12px 0 0; flex-direction: row; align-items: center; justify-content: space-between; text-align: left; }
+  .bus-price-col .btn { width: auto; margin-top: 0; }
+  .bus-price-col .price-value { font-size: 1.4rem; }
+  .bus-card.is-compact { grid-template-columns: 1fr; }
+  .bus-card.is-compact .bus-price-col { grid-column: auto; }
+  .bus-card.is-compact .bus-photo { min-height: 180px; }
+  .bus-card.is-compact .bus-amenities .chip:nth-child(n+3) { display: inline-flex; }
+  .steps-grid { grid-template-columns: 1fr; gap: 24px; }
+  .step-card { display: flex; text-align: left; gap: 16px; align-items: flex-start; padding: 0; }
+  .step-num { margin: 0; flex: 0 0 auto; width: 56px; height: 56px; font-size: 1.05rem; }
+  .step-num i { width: 20px; height: 20px; font-size: .52rem; }
+  .cta-band { padding: 30px 24px; }
+  .cta-stats { gap: 22px; }
+  .auth-section { padding: 30px 0 50px; }
+  .auth-visual { min-height: 260px; }
+  .auth-visual .auth-quote h3 { font-size: 1.15rem; }
+  .auth-quote p { font-size: .78rem; }
+  .auth-form { padding: 30px 24px 34px; }
+  .auth-form-head h2 { font-size: 1.65rem; }
+  .auth-simple-card { padding: 30px 24px; }
+  .search-band { padding: 22px 0 26px; }
+  .search-bar-card { grid-template-columns: 1fr; }
+  .results-head { align-items: flex-start; }
+  .sort-box { width: 100%; }
+  .sort-box .form-select { flex: 1; }
+  .detail-image { height: 260px; }
+  .amenity-grid { grid-template-columns: 1fr 1fr; }
+  .booking-stepper { gap: 0; }
+  .booking-stepper .step span.step-label { display: none; }
+  .booking-stepper .step .num { width: 28px; height: 28px; }
+  .booking-stepper .line { max-width: 44px; margin: 0 8px; }
+  .seat-card { padding: 16px; }
+  .bus-shell { padding: 18px 12px 22px; }
+  .seat-grid { --seat: 42px; gap: 7px; }
+  .seat-grid.sleeper-grid { grid-template-columns: repeat(2, 47px) 20px 47px; }
+  .seat-grid.sleeper-grid .seat { width: 47px; height: 40px; }
+  .bus-summary-bar { padding: 12px; gap: 10px; }
+  .bus-summary-bar img { width: 58px; height: 46px; }
+  .bus-summary-bar .bs-divider { display: none; }
+  .bus-summary-bar .bs-seats { margin-left: 0; width: 100%; text-align: left; border-top: 1px dashed var(--line); padding-top: 8px; }
+  .form-grid { grid-template-columns: 1fr; }
+  .method-grid { grid-template-columns: 1fr 1fr; }
+  .result-card { padding: 30px 20px; }
+  .result-details { grid-template-columns: 1fr; }
+  .result-actions .btn { width: 100%; }
+  .dash-stats { grid-template-columns: 1fr 1fr; }
+  .booking-card { padding: 16px; }
+  .booking-foot { flex-direction: column; align-items: flex-start; }
+  .booking-actions { width: 100%; }
+  .booking-actions .btn { flex: 1; }
+  .booking-summary-banner { padding: 18px; }
+  .booking-summary-banner .spent { text-align: left; }
+  .ticket-head { flex-direction: column; align-items: flex-start; padding: 22px; }
+  .ticket-head .th-meta { text-align: left; }
+  .ticket-body { padding: 22px; }
+  .ticket-grid { grid-template-columns: 1fr 1fr; }
+  .ticket-route { gap: 12px; }
+  .ticket-city .city { font-size: 1.3rem; }
+  .ticket-bottom { flex-direction: column; align-items: flex-start; }
+  .ticket-qr { align-self: center; }
+  .ticket-status-stamp { top: auto; bottom: 16px; right: 16px; }
+  .ticket-passengers { font-size: .76rem; }
+  .ticket-passengers th:nth-child(3), .ticket-passengers td:nth-child(3) { display: none; }
+  .ticket-terms { padding: 18px 22px; }
+  .verify-card { padding: 26px 20px; }
+  .verify-details { grid-template-columns: 1fr; }
+  .footer-bottom-inner { justify-content: center; text-align: center; }
+  .site-footer { padding-top: 48px; }
+  .about-image { min-height: 240px; }
+  .contact-form-card { padding: 22px; }
+}
+
+@media (max-width: 575.98px) {
+  .container-xxl { padding-left: 16px; padding-right: 16px; }
+  .brand-logo { width: 40px; height: 40px; }
+  .brand-name { font-size: 1.32rem; }
+  .brand-sub { font-size: .52rem; }
+  .hero h1 { font-size: 2.2rem; }
+  .hero-badge { font-size: .66rem; }
+  .hero-points { gap: 8px 14px; }
+  .hero-points span { font-size: .72rem; }
+  .search-field .form-control, .search-field .form-select { height: 48px; }
+  .stats-card { grid-template-columns: 1fr; }
+  .stat-item, .stat-item:nth-child(odd) { border-right: 0; border-bottom: 1px solid var(--line); }
+  .stat-item:last-child { border-bottom: 0; }
+  .route-grid { gap: 16px; }
+  .route-card { height: 210px; }
+  .search-card-head h3 { font-size: 1.15rem; }
+  .feature-card { padding: 22px; }
+  .method-grid { grid-template-columns: 1fr 1fr; }
+  .sim-actions .btn { min-width: 100%; }
+  .dash-stats { grid-template-columns: 1fr; }
+  .ticket-grid { grid-template-columns: 1fr; }
+  .booking-actions .btn { flex: 1 1 100%; }
+  .cta-actions .btn { width: 100%; }
+  .result-card h1 { font-size: 1.55rem; }
+  .auth-visual { min-height: 210px; }
+  .auth-quote h3 { font-size: 1rem; }
+  .auth-quote p { display: none; }
+  .auth-form { padding: 26px 18px 30px; }
+  .auth-simple-card { padding: 26px 18px; }
+  .seat-grid { --seat: 38px; gap: 6px; grid-template-columns: repeat(2, var(--seat)) 18px repeat(2, var(--seat)); }
+  .seat-grid.sleeper-grid { grid-template-columns: repeat(2, 42px) 16px 42px; }
+  .seat-grid.sleeper-grid .seat { width: 42px; height: 37px; }
+  .seat { font-size: .58rem; }
+  .legend { gap: 8px; }
+  .legend span { font-size: .62rem; }
+  .amenity-grid { grid-template-columns: 1fr; }
+  .topbar-left { flex-direction: column; gap: 4px; }
+  .footer-social { flex-wrap: wrap; }
+  .footer-badges { gap: .35rem; }
+}

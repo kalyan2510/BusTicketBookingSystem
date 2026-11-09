@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Page not found — BUSGO{% endblock %}
+{% block meta_description %}The page you were looking for has moved or no longer exists. Head back to BUSGO to search buses and manage bookings.{% endblock %}
+
+{% block content %}
+<section class="error-shell">
+  <div class="container-xxl">
+    <div class="error-card">
+      <div class="error-icon"><i class="fa-solid fa-bus-simple"></i></div>
+      <div class="error-code">404</div>
+      <h1>Looks like this stop doesn't exist</h1>
+      <p>The page you're looking for may have moved, been renamed, or the link is incomplete. Let's get you back on the road.</p>
+      <div class="error-actions">
+        <a href="{% url 'buses:home' %}" class="btn btn-brand"><i class="fa-solid fa-house"></i> Back to home</a>
+        <a href="{% url 'buses:search' %}" class="btn btn-outline-navy"><i class="fa-solid fa-magnifying-glass"></i> Search buses</a>
+        <a href="{% url 'contact' %}" class="btn btn-outline-navy"><i class="fa-solid fa-headset"></i> Get help</a>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

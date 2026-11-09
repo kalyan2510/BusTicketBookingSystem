@@ -1,0 +1,193 @@
+{% extends "base.html" %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Select seats · {{ schedule.route.source }} to {{ schedule.route.destination }} — BUSGO{% endblock %}
+
+{% block content %}
+<div class="booking-steps-wrap">
+  <div class="container-xxl">
+    <div class="booking-stepper">
+      <div class="step active"><span class="num">1</span><span class="step-label">Seats</span></div>
+      <span class="line"></span>
+      <div class="step"><span class="num">2</span><span class="step-label">Passengers</span></div>
+      <span class="line"></span>
+      <div class="step"><span class="num">3</span><span class="step-label">Payment</span></div>
+      <span class="line"></span>
+      <div class="step"><span class="num">4</span><span class="step-label">E-ticket</span></div>
+    </div>
+  </div>
+</div>
+
+<section class="seat-page">
+  <div class="container-xxl">
+    <div class="bus-summary-bar">
+      <img src="{{ schedule.bus.image_url }}" alt="{{ schedule.bus.name }}" onerror="this.onerror=null;this.src='{% static 'images/placeholder-bus.svg' %}'">
+      <div>
+        <h2 class="bs-title">{{ schedule.bus.name }}</h2>
+        <div class="bs-meta">{{ schedule.bus.operator.name }} · {{ schedule.bus.bus_type }} · {{ schedule.bus.registration_number }}</div>
+      </div>
+      <div class="bs-divider"></div>
+      <div class="bs-time">
+        <div class="t">{{ schedule.departure_time|time:"H:i" }}</div>
+        <div class="d">{{ schedule.route.source }}</div>
+      </div>
+      <div class="bs-time">
+        <div class="t">{{ schedule.arrival_time|time:"H:i" }}</div>
+        <div class="d">{{ schedule.route.destination }}</div>
+      </div>
+      <div class="bs-divider"></div>
+      <div class="bs-time">
+        <div class="t">{{ schedule.travel_date|date:"d M" }}</div>
+        <div class="d">{{ schedule.travel_date|date:"D, Y" }}</div>
+      </div>
+      <div class="bs-seats">
+        <span class="fw-600 text-navy" data-available-count data-total="{{ total_count }}" data-booked="{{ booked_count }}">{{ available_count }}</span>
+        of {{ total_count }} seats available
+        <div class="fs-13"><a href="{% url 'buses:bus_details' schedule.id %}">View bus details <i class="fa-solid fa-arrow-right"></i></a></div>
+      </div>
+    </div>
+
+    <div class="seat-layout" id="seatSelection"
+         data-max-seats="{{ max_seats }}"
+         data-fee="{{ convenience_fee }}"
+         data-gst="{{ gst_percent }}"
+         data-total-count="{{ total_count }}"
+         data-booked-count="{{ booked_count }}"
+         data-preselect="{{ preselect_ids|join:',' }}">
+      <div>
+        <div class="seat-card">
+          <div class="seat-card-head">
+            <div>
+              <h2><i class="fa-solid fa-chair text-red"></i> Choose your seats</h2>
+              <div class="fs-13 text-muted">Tap a green seat to select it. Tap again to remove.</div>
+              <div class="seat-stats">
+                <span class="seat-stat available"><i class="fa-solid fa-circle"></i> <strong data-available-count>{{ available_count }}</strong> Available</span>
+                <span class="seat-stat booked"><i class="fa-solid fa-circle"></i> <strong data-booked-count>{{ booked_count }}</strong> Booked</span>
+                <span class="seat-stat selected"><i class="fa-solid fa-circle"></i> <strong data-selected-count>0</strong> Selected</span>
+              </div>
+            </div>
+            <div class="legend">
+              <span><i class="swatch available"></i> Available</span>
+              <span><i class="swatch selected"></i> Selected</span>
+              <span><i class="swatch booked"></i> Booked</span>
+              <span><i class="swatch blocked"></i> Unavailable</span>
+            </div>
+          </div>
+
+          {% if decks|length > 1 %}
+            <div class="deck-tabs">
+              {% for deck in decks %}
+                <button type="button" class="deck-tab {% if forloop.first %}active{% endif %}" data-deck-tab="{{ deck.name }}"><i class="fa-solid fa-layer-group"></i> {{ deck.name }} deck</button>
+              {% endfor %}
+            </div>
+          {% endif %}
+
+          {% for deck in decks %}
+            <div class="deck-panel {% if forloop.first %}active{% endif %}" data-deck-panel="{{ deck.name }}">
+              <div class="bus-shell">
+                <div class="bus-front">
+                  <span class="front-entrance" title="Front entrance / boarding door"><i class="fa-solid fa-door-open"></i> Entrance</span>
+                  <span class="front-label"><i class="fa-solid fa-bus-simple"></i> {{ schedule.bus.bus_type }}</span>
+                  <span class="driver-seat"><span class="steering"><i class="fa-solid fa-steering-wheel"></i></span> Driver</span>
+                </div>
+
+                <div class="deck-caption">
+                  <span><i class="fa-solid fa-layer-group"></i> {{ deck.name }} deck</span>
+                  <span>{{ deck.rows|length }} rows · {{ schedule.bus.bus_type }}</span>
+                </div>
+
+                <div class="seat-grid {% if schedule.bus.layout == 'SLEEPER_2X1' %}sleeper-grid{% endif %}">
+                  {% for row in deck.rows %}
+                    <div class="seat-row">
+                      {% for seat in row.seats %}
+                        <button type="button"
+                                class="seat {% if seat.booked %}booked{% endif %}"
+                                data-seat-id="{{ seat.id }}"
+                                data-number="{{ seat.number }}"
+                                data-price="{{ seat.price }}"
+                                title="Seat {{ seat.number }} · ₹{{ seat.price }}{% if seat.window %} · Window seat{% endif %}{% if seat.booked %} · Already booked{% endif %}"
+                                aria-pressed="false"
+                                {% if seat.booked %}disabled aria-disabled="true"{% endif %}
+                                aria-label="Seat {{ seat.number }}{% if seat.window %}, window{% endif %}{% if seat.booked %}, already booked{% endif %}">
+                          {{ seat.number }}
+                          {% if seat.window %}<span class="seat-window" aria-hidden="true"><i class="fa-solid fa-square"></i></span>{% endif %}
+                        </button>
+                        {% if forloop.counter == 2 %}<span class="aisle-gap" aria-hidden="true"></span>{% endif %}
+                      {% endfor %}
+                    </div>
+                  {% endfor %}
+                </div>
+
+                <div class="seat-legend-note">
+                  <i class="fa-solid fa-circle-info"></i> Green = available · Blue = selected · Red = booked · Grey = unavailable (blocked by operator).
+                </div>
+              </div>
+            </div>
+          {% empty %}
+            <div class="empty-state py-4">
+              <div class="empty-icon"><i class="fa-solid fa-chair"></i></div>
+              <h3>No seats configured</h3>
+              <p>The operator hasn't published a seat layout for this departure yet. Please try another bus.</p>
+              <a href="{% url 'buses:search' %}" class="btn btn-brand"><i class="fa-solid fa-magnifying-glass"></i> Search buses</a>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <aside>
+        <div class="summary-card">
+          <div class="summary-head">
+            <div>
+              <h3>Your selection</h3>
+              <div class="fs-13 text-white-70"><span data-selected-count>0</span> of {{ max_seats }} seats</div>
+            </div>
+            <span class="timer-pill"><i class="fa-regular fa-clock"></i> {{ RESERVATION_MINUTES }} min hold</span>
+          </div>
+          <div class="summary-body">
+            <div class="summary-route">
+              <i class="fa-solid fa-location-dot"></i> {{ schedule.route.source }}
+              <i class="fa-solid fa-arrow-right"></i>
+              <i class="fa-solid fa-location-arrow"></i> {{ schedule.route.destination }}
+            </div>
+
+            <div class="selected-seats" id="selectedSeatChips">
+              <span class="empty-selection">No seats selected yet — pick your favourites from the map.</span>
+            </div>
+
+            <div class="fare-line"><span>Seat fare (<span data-selected-count>0</span> seats)</span><strong data-subtotal>₹0</strong></div>
+            <div class="fare-line"><span>Convenience fee</span><strong data-fee>₹0</strong></div>
+            <div class="fare-line"><span>GST ({{ gst_percent }}%)</span><strong data-gst>₹0</strong></div>
+            <div class="fare-total">
+              <span class="lbl">Total payable</span>
+              <span class="amt" data-total>₹0</span>
+            </div>
+
+            <div class="seat-error" id="seatError" role="alert"></div>
+
+            <form id="seatForm" method="post" action="{% url 'bookings:create_booking' schedule.id %}">
+              {% csrf_token %}
+              <div id="seatHiddenInputs"></div>
+              <button type="submit" class="btn btn-brand" id="continueBtn" disabled>
+                <i class="fa-solid fa-arrow-right"></i> Continue to passengers
+              </button>
+            </form>
+
+            <div class="secure-strip justify-content-center">
+              <span><i class="fa-solid fa-lock"></i> Secure hold</span>
+              <span><i class="fa-solid fa-rotate-left"></i> Easy cancellation</span>
+            </div>
+          </div>
+          <div class="summary-footnote">
+            <i class="fa-solid fa-shield-halved"></i> Seats are held for {{ RESERVATION_MINUTES }} minutes. No payment is taken yet.
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/seats.js' %}"></script>
+{% endblock %}

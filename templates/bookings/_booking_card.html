@@ -1,0 +1,137 @@
+{% load static %}
+{% load humanize %}
+<article class="booking-card">
+  <div class="booking-card-head">
+    <div class="d-flex align-items-center gap-2 flex-wrap">
+      <span class="booking-id"><i class="fa-solid fa-hashtag"></i> {{ booking.booking_id }}</span>
+      <span class="status-pill status-{{ booking.status|lower }}">{{ booking.get_status_display }}</span>
+      {% if booking.status == "CONFIRMED" and booking.is_completed %}<span class="pill pill-grey">Completed</span>{% endif %}
+    </div>
+    <span class="booking-id">Booked {{ booking.created_at|date:"d M Y, H:i" }}</span>
+  </div>
+
+  <div class="row g-3 align-items-center">
+    <div class="col-lg-8">
+      <h3 class="booking-route">{{ booking.journey_source|default:booking.schedule.route.source }} <i class="fa-solid fa-arrow-right"></i> {{ booking.journey_destination|default:booking.schedule.route.destination }}</h3>
+      <div class="booking-meta">
+        <span><i class="fa-regular fa-calendar-days"></i> {{ booking.journey_date|date:"D, d M Y" }}</span>
+        <span><i class="fa-regular fa-clock"></i> {{ booking.schedule.departure_time|time:"H:i" }} → {{ booking.schedule.arrival_time|time:"H:i" }}</span>
+        <span><i class="fa-solid fa-bus-simple"></i> {{ booking.schedule.bus.operator.name }} · {{ booking.schedule.bus.name }}</span>
+        <span><i class="fa-solid fa-chair"></i> Seats {{ booking.seats_summary }}</span>
+        <span><i class="fa-solid fa-users"></i> {{ booking.passenger_count }} passenger{{ booking.passenger_count|pluralize }}</span>
+      </div>
+    </div>
+    <div class="col-lg-4 text-lg-end">
+      <div class="booking-price">₹{{ booking.total_amount|floatformat:0|intcomma }} <small>total paid</small></div>
+      {% if booking.ticket_number %}<div class="booking-id mt-1">Ticket {{ booking.ticket_number }}</div>{% endif %}
+    </div>
+  </div>
+
+  <div class="booking-foot mt-3">
+    <div class="d-flex align-items-center gap-2 flex-wrap fs-13 text-muted">
+      <span class="chip {% if booking.payment_status_label == 'Paid' %}chip-green{% elif booking.payment_status_label == 'Refunded' %}chip-red{% endif %}">
+        <i class="fa-solid fa-wallet"></i> {{ booking.payment_status_label }}
+      </span>
+      {% if booking.status == "CANCELLED" and booking.cancellation %}
+        <span class="chip chip-red"><i class="fa-solid fa-rotate-left"></i> Refund ₹{{ booking.cancellation.refund_amount|floatformat:0|intcomma }} ({{ booking.cancellation.refund_percent }}%)</span>
+      {% endif %}
+      {% if mode == "pending" %}
+        <span class="chip"><i class="fa-regular fa-clock"></i> Held until {{ booking.expires_at|date:"H:i" }}</span>
+      {% endif %}
+    </div>
+
+    <div class="booking-actions">
+      {% if mode == "pending" %}
+        <a href="{% url 'payments:checkout' booking.booking_id %}" class="btn btn-brand"><i class="fa-solid fa-credit-card"></i> Complete payment</a>
+        <a href="{% url 'bookings:detail' booking.booking_id %}" class="btn btn-outline-navy"><i class="fa-solid fa-circle-info"></i> Details</a>
+      {% else %}
+        <a href="{% url 'bookings:ticket' booking.booking_id %}" class="btn btn-navy"><i class="fa-solid fa-ticket"></i> View e-ticket</a>
+        {% if booking.status == "CONFIRMED" %}
+          <a href="{% url 'bookings:ticket_pdf' booking.booking_id %}" class="btn btn-outline-navy"><i class="fa-solid fa-file-pdf"></i> PDF</a>
+        {% endif %}
+      {% endif %}
+
+      {% if mode == "upcoming" and booking.can_cancel %}
+        <button class="btn btn-soft-red" type="button" data-bs-toggle="collapse" data-bs-target="#cancel-{{ booking.booking_id }}" aria-expanded="false" aria-controls="cancel-{{ booking.booking_id }}">
+          <i class="fa-solid fa-ban"></i> Cancel booking
+        </button>
+      {% elif mode == "upcoming" %}
+        <span class="chip chip-red"><i class="fa-solid fa-lock"></i> Cancellation closed</span>
+      {% endif %}
+
+      {% if mode == "completed" %}
+        {% if booking.schedule_id in reviewed_schedule_ids %}
+          <span class="chip chip-green"><i class="fa-solid fa-star"></i> Review submitted</span>
+        {% else %}
+          <button class="btn btn-gold" type="button" data-bs-toggle="collapse" data-bs-target="#review-{{ booking.booking_id }}" aria-expanded="false" aria-controls="review-{{ booking.booking_id }}">
+            <i class="fa-solid fa-star"></i> Write a review
+          </button>
+        {% endif %}
+      {% endif %}
+    </div>
+  </div>
+
+  {% if mode == "upcoming" and booking.can_cancel %}
+    <div class="collapse mt-3" id="cancel-{{ booking.booking_id }}">
+      <div class="panel">
+        <div class="panel-body">
+          <div class="row g-3">
+            <div class="col-lg-7">
+              <h4 class="h6 mb-2"><i class="fa-solid fa-triangle-exclamation text-red"></i> Cancel this booking?</h4>
+              <p class="fs-13 text-muted mb-2">
+                Refund estimate: <strong class="text-navy">₹{{ booking.estimated_refund|floatformat:2|intcomma }}</strong>
+                ({{ booking.refund_percent }}% of the total). Refunds return to your original payment method.
+              </p>
+              <form method="post" action="{% url 'bookings:cancel' booking.booking_id %}" data-confirm="Cancel booking {{ booking.booking_id }}? This action cannot be undone.">
+                {% csrf_token %}
+                <label class="form-label" for="reason-{{ booking.booking_id }}">Reason for cancellation</label>
+                <textarea class="form-control" id="reason-{{ booking.booking_id }}" name="reason" rows="2" minlength="5" maxlength="500" placeholder="Tell us why you need to cancel" required></textarea>
+                <button type="submit" class="btn btn-soft-red mt-2"><i class="fa-solid fa-ban"></i> Confirm cancellation</button>
+              </form>
+            </div>
+            <div class="col-lg-5">
+              <div class="refund-rules h-100">
+                <div class="fw-600 text-navy mb-1">Refund policy</div>
+                <ul class="mb-0 ps-3">
+                  <li>24+ hours before departure: <strong>90%</strong> refund</li>
+                  <li>6–24 hours before departure: <strong>50%</strong> refund</li>
+                  <li>Under 6 hours: cancellation not permitted</li>
+                </ul>
+                <div class="mt-2">Refunds are processed automatically to the original payment method.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+
+  {% if mode == "completed" and booking.schedule_id not in reviewed_schedule_ids %}
+    <div class="collapse mt-3" id="review-{{ booking.booking_id }}">
+      <div class="panel">
+        <div class="panel-body">
+          <h4 class="h6 mb-2"><i class="fa-solid fa-star text-gold"></i> How was your journey?</h4>
+          <form method="post" action="{% url 'bookings:review' booking.booking_id %}">
+            {% csrf_token %}
+            <div class="row g-2">
+              <div class="col-md-3">
+                <label class="form-label">Rating</label>
+                {{ review_form.rating }}
+              </div>
+              <div class="col-md-9">
+                <label class="form-label">Title <span class="text-muted">(optional)</span></label>
+                {{ review_form.title }}
+              </div>
+              <div class="col-12">
+                <label class="form-label">Your review</label>
+                {{ review_form.comment }}
+              </div>
+            </div>
+            <button type="submit" class="btn btn-brand btn-sm mt-2"><i class="fa-solid fa-paper-plane"></i> Submit review</button>
+            <span class="fs-13 text-muted ms-2">Reviews appear after moderation.</span>
+          </form>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+</article>

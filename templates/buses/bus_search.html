@@ -1,0 +1,233 @@
+{% extends "base.html" %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}{% if source and destination %}{{ source }} to {{ destination }} buses{% else %}Search buses{% endif %} — BUSGO{% endblock %}
+{% block meta_description %}Compare bus fares, timings and live seat availability on BUSGO. Filter by operator, AC, departure time and price.{% endblock %}
+
+{% block content %}
+<section class="search-band">
+  <div class="container-xxl">
+    <div class="d-flex align-items-start justify-content-between gap-3 flex-wrap">
+      <div>
+        <h1>{% if source and destination %}{{ source }} <i class="fa-solid fa-arrow-right text-gold"></i> {{ destination }}{% else %}Find your next bus{% endif %}</h1>
+        <div class="search-summary">
+          {% if source and destination %}
+            {{ result_count }} bus{{ result_count|pluralize }} found for {{ selected_date|date:"D, d M Y" }}
+          {% else %}
+            Choose a source, destination and journey date to see live departures.
+          {% endif %}
+        </div>
+      </div>
+      <span class="search-date-pill"><i class="fa-regular fa-calendar-days"></i> {{ selected_date|date:"D, d M Y" }}</span>
+    </div>
+
+    <form class="search-bar-card" method="get" action="{% url 'buses:search' %}">
+      <div class="search-field">
+        <label for="searchFrom"><i class="fa-solid fa-location-dot"></i> From</label>
+        <select class="form-select" id="searchFrom" name="from" required>
+          <option value="">Select source city</option>
+          {% for city in cities %}<option value="{{ city }}" {% if city|lower == source|lower %}selected{% endif %}>{{ city }}</option>{% endfor %}
+          {% if source %}{% if source not in cities %}<option value="{{ source }}" selected>{{ source }}</option>{% endif %}{% endif %}
+        </select>
+      </div>
+      <button class="swap-btn" type="button" data-swap aria-label="Swap source and destination" title="Swap cities"><i class="fa-solid fa-right-left"></i></button>
+      <div class="search-field">
+        <label for="searchTo"><i class="fa-solid fa-location-arrow"></i> To</label>
+        <select class="form-select" id="searchTo" name="to" required>
+          <option value="">Select destination</option>
+          {% for city in cities %}<option value="{{ city }}" {% if city|lower == destination|lower %}selected{% endif %}>{{ city }}</option>{% endfor %}
+          {% if destination %}{% if destination not in cities %}<option value="{{ destination }}" selected>{{ destination }}</option>{% endif %}{% endif %}
+        </select>
+      </div>
+      <div class="search-field">
+        <label for="searchDate"><i class="fa-regular fa-calendar-days"></i> Journey date</label>
+        <input type="date" class="form-control" id="searchDate" name="date" value="{{ selected_date|date:'Y-m-d' }}" min="{{ today|date:'Y-m-d' }}" required>
+      </div>
+      <button type="submit" class="btn btn-brand"><i class="fa-solid fa-magnifying-glass"></i> Search</button>
+    </form>
+  </div>
+</section>
+
+<section class="results-wrap">
+  <div class="container-xxl">
+    {% if not source or not destination %}
+      <div class="empty-state">
+        <div class="empty-icon"><i class="fa-solid fa-route"></i></div>
+        <h3>Where would you like to go?</h3>
+        <p>Search from over 500 daily departures across India. Pick your cities and date above to see live fares and seat availability.</p>
+        <div class="d-flex gap-2 justify-content-center flex-wrap">
+          <a href="{% url 'buses:home' %}" class="btn btn-brand"><i class="fa-solid fa-house"></i> Back to home</a>
+          <a href="{% url 'contact' %}" class="btn btn-outline-navy"><i class="fa-solid fa-headset"></i> Need help?</a>
+        </div>
+      </div>
+    {% elif no_route %}
+      <div class="empty-state">
+        <div class="empty-icon"><i class="fa-solid fa-map-location-dot"></i></div>
+        <h3>We don't serve this route yet</h3>
+        <p>No active route connects {{ source }} to {{ destination }} right now. Try a nearby city or browse our popular routes.</p>
+        <a href="{% url 'buses:home' %}#routes" class="btn btn-brand"><i class="fa-solid fa-compass"></i> Explore popular routes</a>
+      </div>
+    {% else %}
+      <div class="results-layout">
+        <aside class="filter-card" id="filterCard">
+          <div class="filter-card-head">
+            <h3><i class="fa-solid fa-sliders text-red"></i> Filters</h3>
+            <a href="{% url 'buses:search' %}?from={{ source|urlencode }}&to={{ destination|urlencode }}&date={{ selected_date|date:'Y-m-d' }}">Reset</a>
+          </div>
+
+          <form method="get" action="{% url 'buses:search' %}">
+            <input type="hidden" name="from" value="{{ source }}">
+            <input type="hidden" name="to" value="{{ destination }}">
+            <input type="hidden" name="date" value="{{ selected_date|date:'Y-m-d' }}">
+
+            <div class="filter-group">
+              <h4>Bus type</h4>
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="bus_type" value="" id="btAny" {% if not selected_bus_type %}checked{% endif %}>
+                <label class="form-check-label" for="btAny">Any type</label>
+              </div>
+              {% for bt in bus_types %}
+                <div class="form-check">
+                  <input class="form-check-input" type="radio" name="bus_type" value="{{ bt }}" id="bt{{ forloop.counter }}" {% if selected_bus_type == bt %}checked{% endif %}>
+                  <label class="form-check-label" for="bt{{ forloop.counter }}">{{ bt }}</label>
+                </div>
+              {% endfor %}
+            </div>
+
+            <div class="filter-group">
+              <h4>Air conditioning</h4>
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="ac" value="" id="acAny" {% if not selected_ac %}checked{% endif %}>
+                <label class="form-check-label" for="acAny">Any</label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="ac" value="ac" id="acYes" {% if selected_ac == "ac" %}checked{% endif %}>
+                <label class="form-check-label" for="acYes">AC</label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="ac" value="non-ac" id="acNo" {% if selected_ac == "non-ac" %}checked{% endif %}>
+                <label class="form-check-label" for="acNo">Non-AC</label>
+              </div>
+            </div>
+
+            <div class="filter-group">
+              <h4>Departure time</h4>
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="departure" value="" id="depAny" {% if not selected_slot %}checked{% endif %}>
+                <label class="form-check-label" for="depAny">Any time</label>
+              </div>
+              {% for slot in departure_slots %}
+                <div class="form-check">
+                  <input class="form-check-input" type="radio" name="departure" value="{{ slot.0 }}" id="dep{{ forloop.counter }}" {% if selected_slot == slot.0 %}checked{% endif %}>
+                  <label class="form-check-label" for="dep{{ forloop.counter }}">{{ slot.1 }}</label>
+                </div>
+              {% endfor %}
+            </div>
+
+            <div class="filter-group">
+              <h4>Operator</h4>
+              <select class="form-select form-select-sm" name="operator">
+                <option value="">All operators</option>
+                {% for op in operators %}
+                  <option value="{{ op }}" {% if selected_operator == op %}selected{% endif %}>{{ op }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="filter-group">
+              <h4>Fare range (₹)</h4>
+              <div class="filter-price">
+                <input type="number" class="form-control" name="min_price" min="0" step="50" placeholder="Min" value="{{ min_price }}">
+                <input type="number" class="form-control" name="max_price" min="0" step="50" placeholder="Max" value="{{ max_price }}">
+              </div>
+            </div>
+
+            <div class="filter-group">
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="available" value="0" id="showSold" {% if not hide_sold_out %}checked{% endif %}>
+                <label class="form-check-label" for="showSold">Show sold-out buses</label>
+              </div>
+            </div>
+
+            <button type="submit" class="btn btn-brand filter-apply"><i class="fa-solid fa-filter"></i> Apply filters</button>
+          </form>
+        </aside>
+
+        <div>
+          <div class="results-head">
+            <div>
+              <h2>{{ result_count }} bus{{ result_count|pluralize }} available</h2>
+              <p>{{ source }} → {{ destination }} · {{ selected_date|date:"D, d M Y" }}</p>
+            </div>
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+              <button class="btn btn-outline-navy btn-sm filter-toggle-btn" type="button" id="filterToggle">
+                <i class="fa-solid fa-sliders"></i> Filters
+              </button>
+              <form class="sort-box" method="get" action="{% url 'buses:search' %}">
+                <input type="hidden" name="from" value="{{ source }}">
+                <input type="hidden" name="to" value="{{ destination }}">
+                <input type="hidden" name="date" value="{{ selected_date|date:'Y-m-d' }}">
+                <input type="hidden" name="bus_type" value="{{ selected_bus_type }}">
+                <input type="hidden" name="ac" value="{{ selected_ac }}">
+                <input type="hidden" name="departure" value="{{ selected_slot }}">
+                <input type="hidden" name="operator" value="{{ selected_operator }}">
+                <input type="hidden" name="min_price" value="{{ min_price }}">
+                <input type="hidden" name="max_price" value="{{ max_price }}">
+                <input type="hidden" name="available" value="{% if hide_sold_out %}1{% else %}0{% endif %}">
+                <label for="sortSelect">Sort by</label>
+                <select class="form-select" id="sortSelect" name="sort" data-auto-submit>
+                  <option value="departure" {% if sort == "departure" %}selected{% endif %}>Departure time</option>
+                  <option value="price_asc" {% if sort == "price_asc" %}selected{% endif %}>Fare: low to high</option>
+                  <option value="price_desc" {% if sort == "price_desc" %}selected{% endif %}>Fare: high to low</option>
+                  <option value="rating" {% if sort == "rating" %}selected{% endif %}>Top rated</option>
+                  <option value="seats" {% if sort == "seats" %}selected{% endif %}>Most seats available</option>
+                </select>
+              </form>
+            </div>
+          </div>
+
+          {% if schedules %}
+            <div class="results-list">
+              {% for schedule in page_obj %}
+                {% include "includes/bus_card.html" with schedule=schedule %}
+              {% endfor %}
+            </div>
+
+            {% if page_obj.has_other_pages %}
+              <nav class="mt-4" aria-label="Search results pages">
+                <ul class="pagination justify-content-center flex-wrap">
+                  <li class="page-item {% if not page_obj.has_previous %}disabled{% endif %}">
+                    <a class="page-link" href="?{{ querystring }}{% if querystring %}&{% endif %}page={% if page_obj.has_previous %}{{ page_obj.previous_page_number }}{% else %}1{% endif %}" aria-label="Previous">
+                      <i class="fa-solid fa-chevron-left"></i>
+                    </a>
+                  </li>
+                  {% for num in page_obj.paginator.page_range %}
+                    {% if num == page_obj.number %}
+                      <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                    {% elif num > page_obj.number|add:"-3" and num < page_obj.number|add:"3" %}
+                      <li class="page-item"><a class="page-link" href="?{{ querystring }}{% if querystring %}&{% endif %}page={{ num }}">{{ num }}</a></li>
+                    {% endif %}
+                  {% endfor %}
+                  <li class="page-item {% if not page_obj.has_next %}disabled{% endif %}">
+                    <a class="page-link" href="?{{ querystring }}{% if querystring %}&{% endif %}page={% if page_obj.has_next %}{{ page_obj.next_page_number }}{% else %}{{ page_obj.paginator.num_pages }}{% endif %}" aria-label="Next">
+                      <i class="fa-solid fa-chevron-right"></i>
+                    </a>
+                  </li>
+                </ul>
+              </nav>
+            {% endif %}
+          {% else %}
+            <div class="empty-state">
+              <div class="empty-icon"><i class="fa-solid fa-bus-simple"></i></div>
+              <h3>No buses match your filters</h3>
+              <p>Try removing a filter, widening your fare range or checking a different date.</p>
+              <a href="{% url 'buses:search' %}?from={{ source|urlencode }}&to={{ destination|urlencode }}&date={{ selected_date|date:'Y-m-d' }}" class="btn btn-brand"><i class="fa-solid fa-rotate-left"></i> Clear filters</a>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

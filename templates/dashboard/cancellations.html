@@ -1,0 +1,87 @@
+{% extends "dashboard/base_dashboard.html" %}
+{% load humanize %}
+
+{% block title %}Cancellations{% endblock %}
+{% block page_title %}Cancellations &amp; refunds{% endblock %}
+{% block page_sub %}Review cancellation requests and the refunds issued against them{% endblock %}
+
+{% block content %}
+<div class="dash-page-head">
+  <div>
+    <h1>Cancellation requests</h1>
+    <p>{{ page_obj.paginator.count }} request{{ page_obj.paginator.count|pluralize }} match this view.</p>
+  </div>
+  <a href="{% url 'dashboard:booking_list' %}" class="btn btn-outline-navy"><i class="fa-solid fa-ticket"></i> Bookings</a>
+</div>
+
+<div class="table-card">
+  <div class="table-toolbar">
+    <h3><i class="fa-solid fa-rotate-left text-red"></i> Refund queue</h3>
+    <form method="get" class="filters">
+      <select name="status" class="form-select" style="min-width:160px;">
+        <option value="">All statuses</option>
+        {% for value, label in status_choices %}
+          <option value="{{ value }}" {% if status == value %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+      <button class="btn btn-outline-navy btn-sm" type="submit">Filter</button>
+      {% if status %}<a href="{% url 'dashboard:cancellation_list' %}" class="btn btn-outline-navy btn-sm">Reset</a>{% endif %}
+    </form>
+  </div>
+  <div class="table-responsive">
+    <table class="dash-table">
+      <thead>
+        <tr><th>Booking</th><th>Traveller</th><th>Journey</th><th>Refund</th><th>Reason</th><th>Status</th><th>Requested</th><th class="text-end">Action</th></tr>
+      </thead>
+      <tbody>
+        {% for cancellation in page_obj %}
+          <tr>
+            <td>
+              <a href="{% url 'dashboard:booking_detail' cancellation.booking.booking_id %}" class="booking-id-mono">{{ cancellation.booking.booking_id }}</a>
+              <div class="cell-sub">₹{{ cancellation.booking.total_amount|floatformat:0|intcomma }} booking</div>
+            </td>
+            <td>
+              <div class="cell-main">{{ cancellation.booking.contact_name }}</div>
+              <div class="cell-sub">{{ cancellation.booking.contact_phone }}</div>
+            </td>
+            <td>
+              <div class="cell-main">{{ cancellation.booking.route_text }}</div>
+              <div class="cell-sub">{{ cancellation.booking.journey_date|date:"d M Y" }}</div>
+            </td>
+            <td>
+              <div class="cell-main text-red">₹{{ cancellation.refund_amount|floatformat:2|intcomma }}</div>
+              <div class="cell-sub">{{ cancellation.refund_percent }}% · fee ₹{{ cancellation.cancellation_fee|floatformat:0|intcomma }}</div>
+            </td>
+            <td style="max-width:220px;"><div class="cell-sub">{{ cancellation.reason|truncatechars:90 }}</div></td>
+            <td><span class="status-pill status-{{ cancellation.status|lower }}">{{ cancellation.get_status_display }}</span></td>
+            <td>
+              <div class="cell-sub">{{ cancellation.requested_at|date:"d M Y, H:i" }}</div>
+              {% if cancellation.processed_at %}<div class="cell-sub">Done {{ cancellation.processed_at|date:"d M Y" }}</div>{% endif %}
+            </td>
+            <td class="text-end">
+              <a href="{% url 'dashboard:cancellation_process' cancellation.pk %}" class="icon-action" title="Process request"><i class="fa-solid fa-pen"></i></a>
+            </td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="8"><div class="table-empty"><i class="fa-solid fa-circle-check"></i>No cancellation requests match your filters.</div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% if page_obj.paginator.num_pages > 1 %}
+    <div class="table-footer">
+      <span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }} · {{ page_obj.paginator.count }} total</span>
+      <nav>
+        <ul class="pagination pagination-sm mb-0">
+          {% if page_obj.has_previous %}<li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if status %}&status={{ status }}{% endif %}"><i class="fa-solid fa-chevron-left"></i></a></li>{% else %}<li class="page-item disabled"><span class="page-link"><i class="fa-solid fa-chevron-left"></i></span></li>{% endif %}
+          {% for num in page_obj.paginator.page_range %}
+            {% if num == page_obj.number %}<li class="page-item active"><span class="page-link">{{ num }}</span></li>
+            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}<li class="page-item"><a class="page-link" href="?page={{ num }}{% if status %}&status={{ status }}{% endif %}">{{ num }}</a></li>{% endif %}
+          {% endfor %}
+          {% if page_obj.has_next %}<li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}{% if status %}&status={{ status }}{% endif %}"><i class="fa-solid fa-chevron-right"></i></a></li>{% else %}<li class="page-item disabled"><span class="page-link"><i class="fa-solid fa-chevron-right"></i></span></li>{% endif %}
+        </ul>
+      </nav>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,126 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>{% block title %}Operations Dashboard{% endblock %} · BUSGO</title>
+  <link rel="icon" type="image/svg+xml" href="{% static 'images/favicon.svg' %}">
+  <link rel="stylesheet" href="{% static 'vendor/bootstrap/bootstrap.min.css' %}">
+  <link rel="stylesheet" href="{% static 'vendor/fontawesome/css/all.min.css' %}">
+  <link rel="stylesheet" href="{% static 'vendor/fonts/fonts.css' %}">
+  <link rel="stylesheet" href="{% static 'css/base.css' %}">
+  <link rel="stylesheet" href="{% static 'css/components.css' %}">
+  <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+  {% block extra_css %}{% endblock %}
+</head>
+<body class="dash-body">
+  <div class="dash-shell">
+    <aside class="dash-sidebar" id="dashSidebar">
+      <a href="{% url 'dashboard:home' %}" class="dash-brand">
+        <img src="{% static 'images/logo.svg' %}" alt="BUSGO logo">
+        <span>
+          <span class="brand-name">BUS<span class="text-red">GO</span></span>
+          <span class="brand-sub d-block">OPERATIONS CONSOLE</span>
+        </span>
+      </a>
+
+      <div class="dash-nav-label">Overview</div>
+      <ul class="dash-nav">
+        <li><a href="{% url 'dashboard:home' %}" class="{% if active == 'dashboard' %}active{% endif %}"><i class="fa-solid fa-gauge-high"></i> Dashboard</a></li>
+      </ul>
+
+      <div class="dash-nav-label">Inventory</div>
+      <ul class="dash-nav">
+        <li><a href="{% url 'dashboard:operator_list' %}" class="{% if active == 'operators' %}active{% endif %}"><i class="fa-solid fa-building"></i> Operators</a></li>
+        <li><a href="{% url 'dashboard:bus_list' %}" class="{% if active == 'buses' %}active{% endif %}"><i class="fa-solid fa-bus-simple"></i> Buses</a></li>
+        <li><a href="{% url 'dashboard:route_list' %}" class="{% if active == 'routes' %}active{% endif %}"><i class="fa-solid fa-route"></i> Routes</a></li>
+        <li><a href="{% url 'dashboard:schedule_list' %}" class="{% if active == 'schedules' %}active{% endif %}"><i class="fa-regular fa-calendar-days"></i> Schedules</a></li>
+      </ul>
+
+      <div class="dash-nav-label">Sales &amp; support</div>
+      <ul class="dash-nav">
+        <li><a href="{% url 'dashboard:booking_list' %}" class="{% if active == 'bookings' %}active{% endif %}"><i class="fa-solid fa-ticket"></i> Bookings</a></li>
+        <li><a href="{% url 'dashboard:passenger_list' %}" class="{% if active == 'passengers' %}active{% endif %}"><i class="fa-solid fa-users"></i> Passengers</a></li>
+        <li><a href="{% url 'dashboard:payment_list' %}" class="{% if active == 'payments' %}active{% endif %}"><i class="fa-solid fa-wallet"></i> Payments</a></li>
+        <li><a href="{% url 'dashboard:cancellation_list' %}" class="{% if active == 'cancellations' %}active{% endif %}"><i class="fa-solid fa-rotate-left"></i> Cancellations</a></li>
+      </ul>
+
+      <div class="dash-nav-label">System</div>
+      <ul class="dash-nav">
+        <li><a href="{% url 'buses:home' %}" target="_blank" rel="noopener"><i class="fa-solid fa-arrow-up-right-from-square"></i> View website</a></li>
+        <li><a href="/admin/" target="_blank" rel="noopener"><i class="fa-solid fa-shield-halved"></i> Django admin</a></li>
+      </ul>
+
+      <div class="dash-sidebar-foot">
+        <div class="d-flex align-items-center gap-2 mb-1">
+          <img src="{{ user.profile.avatar_url }}" alt="" width="26" height="26" style="border-radius:50%;object-fit:cover;" onerror="this.onerror=null;this.src='{% static 'images/avatar-default.svg' %}'">
+          <span class="text-white fw-600">{{ user.profile.display_name|default:user.username }}</span>
+        </div>
+        <span>Signed in as staff · {{ CURRENT_YEAR }} © BUSGO</span>
+      </div>
+    </aside>
+
+    <div class="dash-overlay" id="dashOverlay"></div>
+
+    <div class="dash-main">
+      <header class="dash-topbar">
+        <div class="d-flex align-items-center gap-3">
+          <button class="icon-btn dash-sidebar-toggle" id="dashSidebarToggle" type="button" aria-label="Toggle sidebar"><i class="fa-solid fa-bars"></i></button>
+          <div>
+            <p class="page-title">{% block page_title %}Dashboard{% endblock %}</p>
+            <p class="page-sub">{% block page_sub %}BUSGO operations overview{% endblock %}</p>
+          </div>
+        </div>
+        <div class="dash-topbar-right">
+          <a href="{% url 'buses:home' %}" class="icon-btn" title="Open website" target="_blank" rel="noopener"><i class="fa-solid fa-globe"></i></a>
+          <div class="dropdown">
+            <button class="dash-user btn btn-link p-0 text-decoration-none dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+              <img src="{{ user.profile.avatar_url }}" alt="Avatar" onerror="this.onerror=null;this.src='{% static 'images/avatar-default.svg' %}'">
+              <span>{{ user.profile.display_name|default:user.username }}</span>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end">
+              <li><h6 class="dropdown-header">{{ user.email|default:user.username }}</h6></li>
+              <li><a class="dropdown-item" href="{% url 'accounts:profile' %}"><i class="fa-regular fa-user"></i> My profile</a></li>
+              <li><a class="dropdown-item" href="{% url 'bookings:my_bookings' %}"><i class="fa-solid fa-ticket"></i> My bookings</a></li>
+              <li><hr class="dropdown-divider"></li>
+              <li>
+                <form method="post" action="{% url 'accounts:logout' %}">
+                  {% csrf_token %}
+                  <button type="submit" class="dropdown-item text-danger"><i class="fa-solid fa-arrow-right-from-bracket"></i> Sign out</button>
+                </form>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </header>
+
+      {% if messages %}
+        <div class="px-4 pt-3">
+          {% for message in messages %}
+            <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show mb-2" role="alert">
+              <span class="alert-icon">
+                {% if message.tags == 'success' %}<i class="fa-solid fa-circle-check"></i>
+                {% elif message.tags == 'danger' %}<i class="fa-solid fa-circle-exclamation"></i>
+                {% elif message.tags == 'warning' %}<i class="fa-solid fa-triangle-exclamation"></i>
+                {% else %}<i class="fa-solid fa-circle-info"></i>{% endif %}
+              </span>
+              <span>{{ message }}</span>
+              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+
+      <div class="dash-content">
+        {% block content %}{% endblock %}
+      </div>
+    </div>
+  </div>
+
+  <script src="{% static 'vendor/bootstrap/bootstrap.bundle.min.js' %}"></script>
+  <script src="{% static 'js/dashboard.js' %}"></script>
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

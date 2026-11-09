@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Create your BUSGO account — Book bus tickets online{% endblock %}
+{% block meta_description %}Join BUSGO to book bus tickets, choose your seat, pay securely and receive instant QR e-tickets.{% endblock %}
+
+{% block content %}
+<section class="auth-section">
+  <div class="container-xxl">
+    <div class="auth-card">
+      <div class="auth-visual">
+        <div class="auth-brand">
+          <img src="{% static 'images/logo.svg' %}" alt="BUSGO logo">
+          <span class="brand-text">
+            <span class="brand-name">BUS<span style="color:var(--gold);">GO</span></span>
+            <span class="brand-sub">Online Bus Booking</span>
+          </span>
+        </div>
+        <div class="auth-quote">
+          <div class="quote-mark"><i class="fa-solid fa-quote-left"></i></div>
+          <h3>Every great journey starts with a comfortable seat.</h3>
+          <p>Create your free BUSGO account and unlock live seat maps, instant e-tickets and transparent cancellations.</p>
+          <div class="auth-features">
+            <span><i class="fa-solid fa-check"></i> Verified operators across 500+ routes</span>
+            <span><i class="fa-solid fa-check"></i> Secure, server-verified payments</span>
+            <span><i class="fa-solid fa-check"></i> Free cancellation up to 24 hours</span>
+            <span><i class="fa-solid fa-check"></i> QR e-ticket on every booking</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="auth-form">
+        <div class="auth-form-head">
+          <span class="eyebrow">Get started</span>
+          <h2>Create your account</h2>
+          <p>Already a traveller? <a href="{% url 'accounts:login' %}{% if next %}?next={{ next|urlencode }}{% endif %}">Sign in instead</a></p>
+        </div>
+
+        {% if form.non_field_errors %}
+          <div class="alert alert-danger" role="alert">
+            <span class="alert-icon"><i class="fa-solid fa-circle-exclamation"></i></span>
+            <span>{{ form.non_field_errors.0 }}</span>
+          </div>
+        {% endif %}
+
+        <form method="post" action="{% url 'accounts:register' %}" novalidate>
+          {% csrf_token %}
+          {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+
+          <div class="mb-3">
+            <label class="form-label" for="{{ form.full_name.id_for_label }}">Full name</label>
+            {{ form.full_name }}
+            {% if form.full_name.errors %}<div class="invalid-feedback d-block">{{ form.full_name.errors.0 }}</div>{% endif %}
+          </div>
+
+          <div class="row g-3">
+            <div class="col-sm-7">
+              <label class="form-label" for="{{ form.email.id_for_label }}">Email address</label>
+              {{ form.email }}
+              {% if form.email.errors %}<div class="invalid-feedback d-block">{{ form.email.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="col-sm-5">
+              <label class="form-label" for="{{ form.phone.id_for_label }}">Mobile number</label>
+              {{ form.phone }}
+              {% if form.phone.errors %}<div class="invalid-feedback d-block">{{ form.phone.errors.0 }}</div>{% endif %}
+            </div>
+          </div>
+
+          <div class="row g-3 mt-0">
+            <div class="col-sm-6">
+              <label class="form-label" for="{{ form.password1.id_for_label }}">Password</label>
+              <div class="password-wrap">
+                {{ form.password1 }}
+                <button type="button" class="toggle-password" data-toggle-password="#id_password1" aria-label="Show password">
+                  <i class="fa-regular fa-eye"></i>
+                </button>
+              </div>
+              {% if form.password1.errors %}<div class="invalid-feedback d-block">{{ form.password1.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="col-sm-6">
+              <label class="form-label" for="{{ form.password2.id_for_label }}">Confirm password</label>
+              <div class="password-wrap">
+                {{ form.password2 }}
+                <button type="button" class="toggle-password" data-toggle-password="#id_password2" aria-label="Show password">
+                  <i class="fa-regular fa-eye"></i>
+                </button>
+              </div>
+              {% if form.password2.errors %}<div class="invalid-feedback d-block">{{ form.password2.errors.0 }}</div>{% endif %}
+            </div>
+          </div>
+          <div class="form-text mt-2">Use at least 8 characters with a mix of letters, numbers and symbols.</div>
+
+          <div class="form-check mt-3">
+            {{ form.terms }}
+            <label class="form-check-label" for="{{ form.terms.id_for_label }}">
+              I agree to the <a href="{% url 'policies' %}#terms" target="_blank">Terms of Service</a> and
+              <a href="{% url 'policies' %}#privacy" target="_blank">Privacy Policy</a>.
+            </label>
+            {% if form.terms.errors %}<div class="invalid-feedback d-block">{{ form.terms.errors.0 }}</div>{% endif %}
+          </div>
+
+          <button type="submit" class="btn btn-brand btn-lg">
+            <i class="fa-solid fa-user-plus"></i> Create my account
+          </button>
+
+          <div class="auth-note">
+            <i class="fa-solid fa-shield-halved"></i>
+            <span>Your data is encrypted in transit. We never store card numbers, CVV codes or UPI PINs.</span>
+          </div>
+        </form>
+
+        <p class="auth-footer-text">
+          Already have an account? <a href="{% url 'accounts:login' %}{% if next %}?next={{ next|urlencode }}{% endif %}">Sign in</a>
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

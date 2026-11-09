@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Payment successful · {{ booking.booking_id }} — BUSGO{% endblock %}
+
+{% block content %}
+<div class="booking-steps-wrap">
+  <div class="container-xxl">
+    <div class="booking-stepper">
+      <div class="step done"><span class="num"><i class="fa-solid fa-check"></i></span><span class="step-label">Seats</span></div>
+      <span class="line"></span>
+      <div class="step done"><span class="num"><i class="fa-solid fa-check"></i></span><span class="step-label">Passengers</span></div>
+      <span class="line"></span>
+      <div class="step done"><span class="num"><i class="fa-solid fa-check"></i></span><span class="step-label">Payment</span></div>
+      <span class="line"></span>
+      <div class="step active"><span class="num">4</span><span class="step-label">E-ticket</span></div>
+    </div>
+  </div>
+</div>
+
+<section class="result-section">
+  <div class="container-xxl">
+    <div class="result-card success">
+      <div class="result-icon success"><i class="fa-solid fa-circle-check"></i></div>
+      {% if payment and payment.gateway == "SIMULATED" %}
+        <span class="sim-disclaimer"><i class="fa-solid fa-flask"></i> Simulated demo gateway — no real money was charged</span>
+      {% endif %}
+      <h1>You're all set!</h1>
+      <p class="result-sub">Your payment was verified and your booking is confirmed. A QR e-ticket is ready to download and scan at boarding.</p>
+
+      <div class="result-details">
+        <div class="result-detail"><div class="lbl">Booking ID</div><div class="val">{{ booking.booking_id }}</div></div>
+        <div class="result-detail"><div class="lbl">Ticket number</div><div class="val">{{ booking.ticket_number|default:"—" }}</div></div>
+        <div class="result-detail"><div class="lbl">Amount paid</div><div class="val">₹{{ booking.total_amount|floatformat:2|intcomma }}</div></div>
+        <div class="result-detail"><div class="lbl">Route</div><div class="val">{{ booking.route_text }}</div></div>
+        <div class="result-detail"><div class="lbl">Journey date</div><div class="val">{{ booking.journey_date|date:"D, d M Y" }}</div></div>
+        <div class="result-detail"><div class="lbl">Seats</div><div class="val">{{ booking.seats_summary }}</div></div>
+      </div>
+
+      <div class="result-actions">
+        <a href="{% url 'bookings:ticket' booking.booking_id %}" class="btn btn-brand"><i class="fa-solid fa-ticket"></i> View e-ticket</a>
+        <a href="{% url 'bookings:ticket_pdf' booking.booking_id %}" class="btn btn-navy"><i class="fa-solid fa-file-pdf"></i> Download PDF</a>
+        <a href="{% url 'bookings:my_bookings' %}" class="btn btn-outline-navy"><i class="fa-solid fa-list-check"></i> My bookings</a>
+        <a href="{% url 'buses:home' %}" class="btn btn-outline-navy"><i class="fa-solid fa-house"></i> Back to Home</a>
+      </div>
+
+      <div class="result-note">
+        <i class="fa-solid fa-envelope"></i> A confirmation has been sent to {{ booking.contact_email }}.
+        {% if payment %}<br><span class="mt-1 d-inline-block">Payment reference: <strong>{{ payment.payment_id }}</strong> · {{ payment.get_method_display }}{% if payment.paid_at %} · {{ payment.paid_at|date:"d M Y, H:i" }}{% endif %}</span>{% endif %}
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,301 @@
+{% extends "base.html" %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Secure payment · {{ booking.booking_id }} — BUSGO{% endblock %}
+
+{% block content %}
+<div class="booking-steps-wrap">
+  <div class="container-xxl">
+    <div class="booking-stepper">
+      <div class="step done"><span class="num"><i class="fa-solid fa-check"></i></span><span class="step-label">Seats</span></div>
+      <span class="line"></span>
+      <div class="step done"><span class="num"><i class="fa-solid fa-check"></i></span><span class="step-label">Passengers</span></div>
+      <span class="line"></span>
+      <div class="step active"><span class="num">3</span><span class="step-label">Payment</span></div>
+      <span class="line"></span>
+      <div class="step"><span class="num">4</span><span class="step-label">E-ticket</span></div>
+    </div>
+  </div>
+</div>
+
+<section class="flow-wrap">
+  <div class="container-xxl">
+    <div class="d-flex align-items-center justify-content-between gap-2 flex-wrap mb-3">
+      <div>
+        <h1 class="h3 mb-1">Secure checkout</h1>
+        <p class="text-muted mb-0 fs-14">Booking {{ booking.booking_id }} · {{ booking.seats_summary }} · {{ booking.passenger_count }} passenger{{ booking.passenger_count|pluralize }}</p>
+      </div>
+      <div class="d-flex align-items-center gap-2 flex-wrap">
+        <a href="{% url 'bookings:passenger_details' booking.booking_id %}" class="btn btn-outline-navy btn-sm">
+          <i class="fa-solid fa-arrow-left"></i> Back
+        </a>
+        <span class="pill {% if payment_mode == 'simulated' %}pill-gold{% else %}pill-green{% endif %}">
+          <i class="fa-solid {% if payment_mode == 'simulated' %}fa-flask{% else %}fa-shield-halved{% endif %}"></i>
+          {% if payment_mode == 'simulated' %}Demo gateway{% else %}Razorpay test mode{% endif %}
+        </span>
+      </div>
+    </div>
+
+    <div class="pay-review-strip">
+      <div><span class="lbl">Booking ID</span><strong>{{ booking.booking_id }}</strong></div>
+      <div><span class="lbl">Bus</span><strong>{{ booking.schedule.bus.name }}</strong></div>
+      <div><span class="lbl">Seats</span><strong>{{ booking.seats_summary }}</strong></div>
+      <div><span class="lbl">Passengers</span><strong>{{ booking.passenger_count }}</strong></div>
+      <div><span class="lbl">Amount payable</span><strong class="text-red">₹{{ booking.total_amount|floatformat:2|intcomma }}</strong></div>
+    </div>
+
+    <div class="flow-layout">
+      <div>
+        <form id="paymentForm" method="post" action="{% url 'payments:process' booking.booking_id %}">
+          {% csrf_token %}
+          <input type="hidden" name="token" value="{{ signed_token }}">
+
+          <div class="form-card">
+            <h2><i class="fa-solid fa-wallet text-red"></i> Choose a payment method</h2>
+            <p class="card-sub">All transactions are verified on our servers before your ticket is issued.</p>
+
+            <div class="method-grid">
+              {% for method in methods %}
+                <div class="method-option method-{{ method.slug }}">
+                  <input type="radio" name="method" id="method{{ forloop.counter }}" value="{{ method.code }}" {% if forloop.first %}checked{% endif %}>
+                  <label for="method{{ forloop.counter }}">
+                    <i class="{{ method.icon }}"></i>
+                    <span>{{ method.label }}</span>
+                    <small>
+                      {% if method.code == "QR" %}Scan &amp; pay
+                      {% elif method.code == "NETBANKING" %}All major banks
+                      {% elif method.code == "DEBIT_CARD" or method.code == "CREDIT_CARD" %}Visa, Mastercard, RuPay
+                      {% else %}Instant confirmation{% endif %}
+                    </small>
+                  </label>
+                </div>
+              {% endfor %}
+            </div>
+
+            <div class="pay-method-note">
+              <i class="fa-solid fa-shield-halved"></i>
+              <span>You'll complete payment in your bank or UPI app. BUSGO never sees or stores your card number, CVV, UPI PIN or OTP.</span>
+            </div>
+
+            {% if payment_mode == 'simulated' and upi_qr %}
+              <div class="qr-panel" id="qrPanel">
+                <img src="{{ upi_qr }}" alt="Demo UPI payment QR code for booking {{ booking.booking_id }}">
+                <div class="qr-panel-copy">
+                  <span class="sim-badge">DEMO UPI QR</span>
+                  <h4>Scan to simulate a UPI payment</h4>
+                  <p>This QR is generated for the simulated gateway only — it uses the placeholder VPA <strong>busgo.demo@upi</strong> and cannot move real money. Never enter a real UPI PIN on a demo screen.</p>
+                  <div class="qr-amount">₹{{ booking.total_amount|floatformat:2|intcomma }}</div>
+                </div>
+              </div>
+            {% endif %}
+          </div> <!-- /form-card -->
+
+          <div class="form-card">
+            <h2><i class="fa-solid fa-users text-red"></i> Passenger details</h2>
+            <p class="card-sub">Review the travellers on this booking before paying.</p>
+            <div class="table-responsive">
+              <table class="dash-table pay-passenger-table">
+                <thead><tr><th>Seat</th><th>Passenger</th><th>Age</th><th>Gender</th><th>Contact</th></tr></thead>
+                <tbody>
+                  {% for passenger in passengers %}
+                    <tr>
+                      <td class="fw-700 text-red">{{ passenger.seat_number }}</td>
+                      <td class="cell-main">{{ passenger.name }}</td>
+                      <td>{{ passenger.age }}</td>
+                      <td>{{ passenger.gender }}</td>
+                      <td>{{ passenger.phone|default:booking.contact_phone }}<div class="cell-sub">{{ passenger.email|default:booking.contact_email }}</div></td>
+                    </tr>
+                  {% empty %}
+                    <tr><td colspan="5"><div class="table-empty"><i class="fa-solid fa-users"></i>Passenger details are missing.</div></td></tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+            <a href="{% url 'bookings:passenger_details' booking.booking_id %}" class="btn btn-outline-navy btn-sm mt-2">
+              <i class="fa-solid fa-user-pen"></i> Edit passenger details
+            </a>
+          </div>
+
+          {% if payment_mode == 'simulated' %}
+            <div class="sim-box">
+              <div class="sim-head">
+                <span class="sim-badge">DEMO GATEWAY</span>
+                <div>
+                  <h4>Simulated payment — no real money moves</h4>
+                  <p>This project runs a clearly labelled demo gateway by default. Use the buttons below to test each outcome.</p>
+                </div>
+              </div>
+              <div class="sim-actions">
+                <button type="submit" name="action" value="success" class="btn btn-brand">
+                  <i class="fa-solid fa-lock"></i> Pay Now · ₹{{ booking.total_amount|floatformat:2|intcomma }}
+                </button>
+                <button type="submit" name="action" value="failure" class="btn btn-soft-red">
+                  <i class="fa-solid fa-circle-xmark"></i> Simulate failure
+                </button>
+                <button type="submit" name="action" value="pending" class="btn btn-outline-navy">
+                  <i class="fa-solid fa-hourglass-half"></i> Mark pending
+                </button>
+              </div>
+              <div class="sim-note">
+                <i class="fa-solid fa-circle-info"></i>
+                <span>No card, UPI or bank details are collected or stored anywhere in this demo flow.</span>
+              </div>
+            </div>
+          {% else %}
+            <div class="sim-box" style="background:#f4fbf7;border-color:#b9ebd7;">
+              <div class="sim-head">
+                <span class="sim-badge" style="background:var(--green);color:#fff;">RAZORPAY TEST</span>
+                <div>
+                  <h4>Razorpay test-mode checkout</h4>
+                  <p>The amount and payment signature are verified server-side before confirming your booking.</p>
+                </div>
+              </div>
+              <button type="button" class="btn btn-brand w-100" id="razorpayBtn">
+                <i class="fa-solid fa-lock"></i> Pay ₹{{ booking.total_amount|floatformat:2|intcomma }} with Razorpay
+              </button>
+              <div class="sim-note">
+                <i class="fa-solid fa-circle-info"></i>
+                <span>Use Razorpay's official test cards / UPI IDs. No real money is charged in test mode.</span>
+              </div>
+            </div>
+          {% endif %}
+
+          <div class="secure-strip">
+            <span><i class="fa-solid fa-lock"></i> 256-bit SSL encryption</span>
+            <span><i class="fa-solid fa-shield-halved"></i> PCI-DSS ready</span>
+            <span><i class="fa-solid fa-server"></i> Server-side verification</span>
+            <span><i class="fa-solid fa-receipt"></i> Instant receipt</span>
+          </div>
+        </form>
+      </div>
+
+      <aside>
+        <div class="summary-card">
+          <div class="summary-head">
+            <div>
+              <h3>Amount payable</h3>
+              <div class="fs-13 text-white-70">Reservation expires in {{ minutes_left }} min</div>
+            </div>
+            <span class="timer-pill"><i class="fa-regular fa-clock"></i> {{ minutes_left }} min</span>
+          </div>
+          <div class="summary-body">
+            <div class="bus-mini">
+              <img src="{{ booking.schedule.bus.image_url }}" alt="{{ booking.schedule.bus.name }}" onerror="this.onerror=null;this.src='{% static 'images/placeholder-bus.svg' %}'">
+              <div>
+                <div class="bm-title">{{ booking.schedule.bus.name }}</div>
+                <div class="bm-sub">{{ booking.schedule.bus.operator.name }}</div>
+              </div>
+            </div>
+
+            <div class="journey-facts">
+              <div class="journey-fact"><div class="lbl">Route</div><div class="val">{{ booking.schedule.route.source }} → {{ booking.schedule.route.destination }}</div></div>
+              <div class="journey-fact"><div class="lbl">Journey date</div><div class="val">{{ booking.journey_date|date:"d M Y" }}</div></div>
+              <div class="journey-fact"><div class="lbl">Departure</div><div class="val">{{ booking.schedule.departure_time|time:"H:i" }}</div></div>
+              <div class="journey-fact"><div class="lbl">Seats</div><div class="val">{{ booking.seats_summary }}</div></div>
+            </div>
+
+            <div class="fare-line"><span>Seat subtotal</span><strong>₹{{ booking.seat_subtotal|floatformat:2|intcomma }}</strong></div>
+            <div class="fare-line"><span>Convenience fee</span><strong>₹{{ booking.convenience_fee|floatformat:2|intcomma }}</strong></div>
+            <div class="fare-line"><span>GST</span><strong>₹{{ booking.gst_amount|floatformat:2|intcomma }}</strong></div>
+            <div class="pay-summary-total">
+              <span>Total payable</span>
+              <strong>₹{{ booking.total_amount|floatformat:0|intcomma }}</strong>
+            </div>
+
+            <div class="refund-rules mt-3">
+              <div class="fw-600 text-navy mb-1"><i class="fa-solid fa-rotate-left text-green"></i> Cancellation policy</div>
+              <ul class="mb-0 ps-3">
+                <li>90% refund when cancelled 24+ hours before departure.</li>
+                <li>50% refund between 6 and 24 hours before departure.</li>
+                <li>No cancellation within 6 hours of departure.</li>
+              </ul>
+            </div>
+
+            <a href="{% url 'bookings:passenger_details' booking.booking_id %}" class="btn btn-outline-navy mt-3">
+              <i class="fa-solid fa-arrow-left"></i> Edit passenger details
+            </a>
+          </div>
+          <div class="summary-footnote">
+            <i class="fa-solid fa-shield-halved"></i> Payment reference {{ payment.payment_id }}
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+  const qrPanel = document.getElementById("qrPanel");
+  const radios = document.querySelectorAll('input[name="method"]');
+  function syncQrPanel() {
+    if (!qrPanel) return;
+    const selected = document.querySelector('input[name="method"]:checked');
+    qrPanel.classList.toggle("show", !!selected && selected.value === "QR");
+  }
+  radios.forEach(function (radio) {
+    radio.addEventListener("change", syncQrPanel);
+  });
+  syncQrPanel();
+})();
+</script>
+{% if razorpay_ready %}
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+(function () {
+  const payBtn = document.getElementById("razorpayBtn");
+  if (!payBtn || typeof Razorpay === "undefined") return;
+  payBtn.addEventListener("click", function () {
+    const csrfInput = document.querySelector("#paymentForm [name=csrfmiddlewaretoken]");
+    const options = {
+      key: "{{ razorpay_key }}",
+      amount: Math.round(parseFloat("{{ payment.amount }}") * 100),
+      currency: "INR",
+      name: "BUSGO",
+      description: "Booking {{ booking.booking_id }}",
+      order_id: "{{ razorpay_order_id }}",
+      prefill: {
+        name: "{{ booking.contact_name|escapejs }}",
+        email: "{{ booking.contact_email|escapejs }}",
+        contact: "{{ booking.contact_phone|escapejs }}"
+      },
+      theme: { color: "#e63946" },
+      handler: function (response) {
+        payBtn.disabled = true;
+        payBtn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Verifying payment...';
+        fetch("{% url 'payments:razorpay_verify' booking.booking_id %}", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": csrfInput ? csrfInput.value : ""
+          },
+          body: JSON.stringify(response)
+        })
+          .then(function (res) { return res.json().then(function (data) { return { ok: res.ok, data: data }; }); })
+          .then(function (result) {
+            if (result.ok && result.data.redirect_url) {
+              window.location.href = result.data.redirect_url;
+            } else {
+              window.location.href = "{% url 'payments:failed' booking.booking_id %}";
+            }
+          })
+          .catch(function () {
+            window.location.href = "{% url 'payments:failed' booking.booking_id %}";
+          });
+      },
+      modal: {
+        ondismiss: function () {
+          payBtn.disabled = false;
+          payBtn.innerHTML = '<i class="fa-solid fa-lock"></i> Pay ₹{{ booking.total_amount|floatformat:2|intcomma }} with Razorpay';
+        }
+      }
+    };
+    new Razorpay(options).open();
+  });
+})();
+</script>
+{% endif %}
+{% endblock %}

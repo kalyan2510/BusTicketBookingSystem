@@ -1,0 +1,6 @@
+Django==5.2.18
+mysqlclient==2.3.0
+python-dotenv==1.2.3
+Pillow==11.3.0
+qrcode==8.2
+reportlab==5.0.1

@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Verify ticket {{ ticket_number }} — BUSGO{% endblock %}
+
+{% block content %}
+<section class="verify-wrap">
+  <div class="container-xxl">
+    <div class="verify-card">
+      {% if booking and booking.status == "CONFIRMED" %}
+        <div class="verify-icon valid"><i class="fa-solid fa-shield-halved"></i></div>
+        <h1>Ticket verified</h1>
+        <p class="verify-sub">This is a genuine BUSGO e-ticket. Details are shown below.</p>
+        <div class="verify-details">
+          <div class="vd"><div class="lbl">Ticket number</div><div class="val">{{ booking.ticket_number }}</div></div>
+          <div class="vd"><div class="lbl">Booking ID</div><div class="val">{{ booking.booking_id }}</div></div>
+          <div class="vd"><div class="lbl">Route</div><div class="val">{{ booking.route_text }}</div></div>
+          <div class="vd"><div class="lbl">Journey date</div><div class="val">{{ booking.journey_date|date:"D, d M Y" }}</div></div>
+          <div class="vd"><div class="lbl">Operator</div><div class="val">{{ booking.schedule.bus.operator.name }}</div></div>
+          <div class="vd"><div class="lbl">Bus</div><div class="val">{{ booking.schedule.bus.name }}</div></div>
+          <div class="vd"><div class="lbl">Departure</div><div class="val">{{ booking.schedule.departure_time|time:"h:i A" }}</div></div>
+          <div class="vd"><div class="lbl">Seats</div><div class="val">{{ booking.seats_summary }}</div></div>
+        </div>
+        <div class="ticket-verify-box justify-content-center mt-3"><i class="fa-solid fa-circle-check"></i> Status: confirmed and paid</div>
+      {% elif booking %}
+        <div class="verify-icon invalid"><i class="fa-solid fa-circle-xmark"></i></div>
+        <h1>Ticket not valid</h1>
+        <p class="verify-sub">This ticket exists but is <strong>{{ booking.get_status_display|lower }}</strong>. It cannot be used for boarding.</p>
+        <div class="verify-details">
+          <div class="vd"><div class="lbl">Ticket number</div><div class="val">{{ booking.ticket_number|default:ticket_number }}</div></div>
+          <div class="vd"><div class="lbl">Status</div><div class="val">{{ booking.get_status_display }}</div></div>
+          <div class="vd"><div class="lbl">Route</div><div class="val">{{ booking.route_text }}</div></div>
+          <div class="vd"><div class="lbl">Journey date</div><div class="val">{{ booking.journey_date|date:"D, d M Y" }}</div></div>
+        </div>
+      {% else %}
+        <div class="verify-icon invalid"><i class="fa-solid fa-magnifying-glass"></i></div>
+        <h1>Ticket not found</h1>
+        <p class="verify-sub">We couldn't find a BUSGO ticket with the number <strong>{{ ticket_number }}</strong>. Please check the QR code or contact support.</p>
+        <a href="{% url 'contact' %}" class="btn btn-brand mt-2"><i class="fa-solid fa-headset"></i> Contact support</a>
+      {% endif %}
+
+      <div class="divider"></div>
+      <p class="fs-13 text-muted mb-0">
+        <i class="fa-solid fa-lock"></i> Verification is performed live against the BUSGO booking database. Personal contact details are never shown publicly.
+      </p>
+    </div>
+  </div>
+</section>
+{% endblock %}

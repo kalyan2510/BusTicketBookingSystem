@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}My bookings — BUSGO{% endblock %}
+
+{% block content %}
+<section class="page-hero">
+  <div class="container-xxl">
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'buses:home' %}">Home</a></li>
+        <li class="breadcrumb-item active" aria-current="page">My bookings</li>
+      </ol>
+    </nav>
+    <h1>My bookings</h1>
+    <p>Manage upcoming journeys, download e-tickets, cancel trips and review completed rides.</p>
+  </div>
+</section>
+
+<section class="bookings-wrap">
+  <div class="container-xxl">
+    <div class="booking-summary-banner">
+      <div>
+        <h2>Hello, {{ user.profile.display_name|default:user.username }}</h2>
+        <p>{{ all_bookings|length }} booking{{ all_bookings|length|pluralize }} in your BUSGO account · {{ upcoming|length }} upcoming journey{{ upcoming|length|pluralize }}</p>
+      </div>
+      <div class="d-flex align-items-center gap-3 flex-wrap">
+        <div class="spent">
+          <div class="amount">₹{{ total_spent|floatformat:0|intcomma }}</div>
+          <div class="label">Total spent on confirmed trips</div>
+        </div>
+        <a href="{% url 'buses:search' %}" class="btn btn-brand"><i class="fa-solid fa-plus"></i> Book a new trip</a>
+      </div>
+    </div>
+
+    <div class="dash-stats">
+      <div class="dash-stat">
+        <div class="ds-icon" style="background:var(--navy);color:#fff;"><i class="fa-solid fa-ticket"></i></div>
+        <div><div class="ds-num">{{ all_bookings|length }}</div><div class="ds-lbl">All bookings</div></div>
+      </div>
+      <div class="dash-stat">
+        <div class="ds-icon" style="background:var(--green-soft);color:var(--green);"><i class="fa-solid fa-bus-simple"></i></div>
+        <div><div class="ds-num">{{ upcoming|length }}</div><div class="ds-lbl">Upcoming trips</div></div>
+      </div>
+      <div class="dash-stat">
+        <div class="ds-icon" style="background:var(--gold-soft);color:#9a7200;"><i class="fa-solid fa-flag-checkered"></i></div>
+        <div><div class="ds-num">{{ completed|length }}</div><div class="ds-lbl">Completed</div></div>
+      </div>
+      <div class="dash-stat">
+        <div class="ds-icon" style="background:var(--red-soft);color:var(--red);"><i class="fa-solid fa-ban"></i></div>
+        <div><div class="ds-num">{{ cancelled|length }}</div><div class="ds-lbl">Cancelled / expired</div></div>
+      </div>
+    </div>
+
+    <ul class="nav booking-tabs" role="tablist">
+      <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="tab-upcoming" data-bs-toggle="tab" data-bs-target="#pane-upcoming" type="button" role="tab" aria-controls="pane-upcoming" aria-selected="true">
+          <i class="fa-solid fa-bus-simple"></i> Upcoming <span class="pill pill-green ms-1">{{ upcoming|length }}</span>
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="tab-completed" data-bs-toggle="tab" data-bs-target="#pane-completed" type="button" role="tab" aria-controls="pane-completed" aria-selected="false">
+          <i class="fa-solid fa-flag-checkered"></i> Completed <span class="pill pill-grey ms-1">{{ completed|length }}</span>
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="tab-cancelled" data-bs-toggle="tab" data-bs-target="#pane-cancelled" type="button" role="tab" aria-controls="pane-cancelled" aria-selected="false">
+          <i class="fa-solid fa-ban"></i> Cancelled <span class="pill pill-red ms-1">{{ cancelled|length }}</span>
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="tab-pending" data-bs-toggle="tab" data-bs-target="#pane-pending" type="button" role="tab" aria-controls="pane-pending" aria-selected="false">
+          <i class="fa-regular fa-clock"></i> Pending <span class="pill pill-gold ms-1">{{ pending|length }}</span>
+        </button>
+      </li>
+    </ul>
+
+    <div class="tab-content">
+      <div class="tab-pane fade show active" id="pane-upcoming" role="tabpanel" aria-labelledby="tab-upcoming" tabindex="0">
+        {% for booking in upcoming %}
+          {% include "bookings/_booking_card.html" with booking=booking mode="upcoming" %}
+        {% empty %}
+          <div class="empty-state">
+            <div class="empty-icon"><i class="fa-solid fa-bus-simple"></i></div>
+            <h3>No upcoming journeys</h3>
+            <p>Your next adventure is waiting. Search buses across India and pick your favourite seat.</p>
+            <a href="{% url 'buses:search' %}" class="btn btn-brand"><i class="fa-solid fa-magnifying-glass"></i> Search buses</a>
+          </div>
+        {% endfor %}
+      </div>
+
+      <div class="tab-pane fade" id="pane-completed" role="tabpanel" aria-labelledby="tab-completed" tabindex="0">
+        {% for booking in completed %}
+          {% include "bookings/_booking_card.html" with booking=booking mode="completed" %}
+        {% empty %}
+          <div class="empty-state">
+            <div class="empty-icon"><i class="fa-solid fa-flag-checkered"></i></div>
+            <h3>No completed journeys yet</h3>
+            <p>Once you've travelled, your past trips will appear here so you can review them.</p>
+          </div>
+        {% endfor %}
+      </div>
+
+      <div class="tab-pane fade" id="pane-cancelled" role="tabpanel" aria-labelledby="tab-cancelled" tabindex="0">
+        {% for booking in cancelled %}
+          {% include "bookings/_booking_card.html" with booking=booking mode="cancelled" %}
+        {% empty %}
+          <div class="empty-state">
+            <div class="empty-icon"><i class="fa-solid fa-ban"></i></div>
+            <h3>Nothing cancelled</h3>
+            <p>All your bookings are active. Cancelled and expired reservations will be listed here.</p>
+          </div>
+        {% endfor %}
+      </div>
+
+      <div class="tab-pane fade" id="pane-pending" role="tabpanel" aria-labelledby="tab-pending" tabindex="0">
+        {% for booking in pending %}
+          {% include "bookings/_booking_card.html" with booking=booking mode="pending" %}
+        {% empty %}
+          <div class="empty-state">
+            <div class="empty-icon"><i class="fa-regular fa-clock"></i></div>
+            <h3>No payments pending</h3>
+            <p>Reservations awaiting payment appear here until they are confirmed or expire.</p>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,92 @@
+{% extends "dashboard/base_dashboard.html" %}
+{% load static %}
+
+{% block title %}Bus operators{% endblock %}
+{% block page_title %}Bus operators{% endblock %}
+{% block page_sub %}Manage the companies that own and run your fleet{% endblock %}
+
+{% block content %}
+<div class="dash-page-head">
+  <div>
+    <h1>Bus operators</h1>
+    <p>{{ page_obj.paginator.count }} operator{{ page_obj.paginator.count|pluralize }} on the platform.</p>
+  </div>
+  <a href="{% url 'dashboard:operator_add' %}" class="btn btn-brand"><i class="fa-solid fa-plus"></i> Add operator</a>
+</div>
+
+<div class="table-card">
+  <div class="table-toolbar">
+    <h3><i class="fa-solid fa-building text-red"></i> Operator directory</h3>
+    <form method="get" class="filters">
+      <div class="dash-search">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input type="search" name="q" value="{{ query }}" class="form-control search-input" placeholder="Search name or email">
+      </div>
+      <button class="btn btn-outline-navy btn-sm" type="submit">Search</button>
+      {% if query %}<a href="{% url 'dashboard:operator_list' %}" class="btn btn-outline-navy btn-sm">Reset</a>{% endif %}
+    </form>
+  </div>
+  <div class="table-responsive">
+    <table class="dash-table">
+      <thead>
+        <tr><th>Operator</th><th>Rating</th><th>Contact</th><th>Buses</th><th>Status</th><th class="text-end">Actions</th></tr>
+      </thead>
+      <tbody>
+        {% for operator in page_obj %}
+          <tr>
+            <td>
+              <div class="d-flex align-items-center gap-2">
+                <img src="{{ operator.logo_url }}" alt="{{ operator.name }} logo" class="table-img" style="width:40px;height:40px;border-radius:9px;" onerror="this.onerror=null;this.src='{% static 'images/placeholder-bus.svg' %}'">
+                <div>
+                  <div class="cell-main">{{ operator.name }}</div>
+                  <div class="cell-sub">{{ operator.slug }}</div>
+                </div>
+              </div>
+            </td>
+            <td><span class="chip chip-gold"><i class="fa-solid fa-star"></i> {{ operator.rating }}</span></td>
+            <td>
+              <div class="cell-main">{{ operator.contact_email|default:"—" }}</div>
+              <div class="cell-sub">{{ operator.contact_phone|default:"No phone" }}</div>
+            </td>
+            <td><span class="chip">{{ operator.bus_count }} bus{{ operator.bus_count|pluralize }}</span></td>
+            <td>
+              {% if operator.is_active %}<span class="status-pill status-confirmed">Active</span>
+              {% else %}<span class="status-pill status-cancelled">Inactive</span>{% endif %}
+            </td>
+            <td>
+              <div class="actions">
+                <a href="{% url 'dashboard:operator_edit' operator.pk %}" class="icon-action" title="Edit"><i class="fa-solid fa-pen"></i></a>
+                <form method="post" action="{% url 'dashboard:operator_delete' operator.pk %}" data-confirm="Delete operator '{{ operator.name }}'? This cannot be undone.">
+                  {% csrf_token %}
+                  <button type="submit" class="icon-action danger" title="Delete"><i class="fa-solid fa-trash"></i></button>
+                </form>
+              </div>
+            </td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="6"><div class="table-empty"><i class="fa-solid fa-building"></i>No operators found. Add your first operator to start scheduling buses.</div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% if page_obj.paginator.num_pages > 1 %}
+    <div class="table-footer">
+      <span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }} · {{ page_obj.paginator.count }} total</span>
+      <nav>
+        <ul class="pagination pagination-sm mb-0">
+          {% if page_obj.has_previous %}
+            <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query|urlencode }}{% endif %}"><i class="fa-solid fa-chevron-left"></i></a></li>
+          {% else %}<li class="page-item disabled"><span class="page-link"><i class="fa-solid fa-chevron-left"></i></span></li>{% endif %}
+          {% for num in page_obj.paginator.page_range %}
+            {% if num == page_obj.number %}<li class="page-item active"><span class="page-link">{{ num }}</span></li>
+            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}<li class="page-item"><a class="page-link" href="?page={{ num }}{% if query %}&q={{ query|urlencode }}{% endif %}">{{ num }}</a></li>{% endif %}
+          {% endfor %}
+          {% if page_obj.has_next %}
+            <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}{% if query %}&q={{ query|urlencode }}{% endif %}"><i class="fa-solid fa-chevron-right"></i></a></li>
+          {% else %}<li class="page-item disabled"><span class="page-link"><i class="fa-solid fa-chevron-right"></i></span></li>{% endif %}
+        </ul>
+      </nav>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

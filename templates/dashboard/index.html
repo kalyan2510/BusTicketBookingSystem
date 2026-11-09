@@ -1,0 +1,162 @@
+{% extends "dashboard/base_dashboard.html" %}
+{% load static humanize %}
+
+{% block title %}Dashboard{% endblock %}
+{% block page_title %}Operations dashboard{% endblock %}
+{% block page_sub %}Live view of sales, occupancy and support activity{% endblock %}
+
+{% block content %}
+<div class="dash-page-head">
+  <div>
+    <h1>Welcome back, {{ user.profile.display_name|default:user.username|title }} 👋</h1>
+    <p>Here is what is happening across BUSGO today.</p>
+  </div>
+  <div class="d-flex gap-2 flex-wrap">
+    <a href="{% url 'dashboard:schedule_add' %}" class="btn btn-outline-navy"><i class="fa-regular fa-calendar-plus"></i> Add schedule</a>
+    <a href="{% url 'dashboard:booking_list' %}" class="btn btn-brand"><i class="fa-solid fa-ticket"></i> Manage bookings</a>
+  </div>
+</div>
+
+<div class="stat-grid">
+  <div class="stat-card">
+    <div class="sc-icon red"><i class="fa-solid fa-indian-rupee-sign"></i></div>
+    <div class="sc-num">₹{{ stats.revenue|floatformat:0|intcomma }}</div>
+    <div class="sc-label">Gross revenue</div>
+    <div class="sc-trend">₹{{ stats.today_revenue|floatformat:0|intcomma }} collected today</div>
+  </div>
+  <div class="stat-card">
+    <div class="sc-icon navy"><i class="fa-solid fa-ticket"></i></div>
+    <div class="sc-num">{{ stats.bookings|intcomma }}</div>
+    <div class="sc-label">Total bookings</div>
+    <div class="sc-trend muted">{{ stats.today_bookings }} new today · {{ stats.confirmed }} confirmed</div>
+  </div>
+  <div class="stat-card">
+    <div class="sc-icon green"><i class="fa-solid fa-bus-simple"></i></div>
+    <div class="sc-num">{{ stats.buses }}</div>
+    <div class="sc-label">Active fleet</div>
+    <div class="sc-trend muted">{{ stats.schedules }} upcoming departures · {{ stats.routes }} routes</div>
+  </div>
+  <div class="stat-card">
+    <div class="sc-icon gold"><i class="fa-solid fa-users"></i></div>
+    <div class="sc-num">{{ stats.users|intcomma }}</div>
+    <div class="sc-label">Registered travellers</div>
+    <div class="sc-trend {% if stats.pending_cancellations %}text-red{% else %}muted{% endif %}">
+      {% if stats.pending_cancellations %}{{ stats.pending_cancellations }} cancellation request{{ stats.pending_cancellations|pluralize }} waiting{% else %}No pending cancellations{% endif %}
+    </div>
+  </div>
+</div>
+
+<div class="chart-grid">
+  <div class="panel">
+    <div class="panel-head">
+      <div><h3>Bookings &amp; revenue</h3><p>Last 14 days</p></div>
+      <span class="chip chip-green"><i class="fa-solid fa-arrow-trend-up"></i> Live</span>
+    </div>
+    <div class="panel-body"><div class="chart-box"><canvas id="trendChart" aria-label="Bookings and revenue trend"></canvas></div></div>
+  </div>
+  <div class="panel">
+    <div class="panel-head"><div><h3>Booking status</h3><p>All-time split</p></div></div>
+    <div class="panel-body"><div class="chart-box"><canvas id="statusChart" aria-label="Booking status split"></canvas></div></div>
+  </div>
+</div>
+
+<div class="chart-grid">
+  <div class="panel">
+    <div class="panel-head"><div><h3>Revenue by month</h3><p>Rolling six months</p></div></div>
+    <div class="panel-body"><div class="chart-box small"><canvas id="monthlyChart" aria-label="Monthly revenue"></canvas></div></div>
+  </div>
+  <div class="panel">
+    <div class="panel-head"><div><h3>Top routes</h3><p>By confirmed bookings</p></div></div>
+    <div class="panel-body"><div class="chart-box small"><canvas id="routesChart" aria-label="Top routes"></canvas></div></div>
+  </div>
+</div>
+
+<div class="dash-two-col">
+  <div class="table-card">
+    <div class="table-toolbar">
+      <h3><i class="fa-solid fa-clock-rotate-left text-red"></i> Latest bookings</h3>
+      <a href="{% url 'dashboard:booking_list' %}" class="btn btn-outline-navy btn-sm">View all</a>
+    </div>
+    <div class="table-responsive">
+      <table class="dash-table">
+        <thead>
+          <tr><th>Booking</th><th>Traveller</th><th>Journey</th><th>Amount</th><th>Status</th><th></th></tr>
+        </thead>
+        <tbody>
+          {% for booking in recent_bookings %}
+            <tr>
+              <td>
+                <div class="booking-id-mono">{{ booking.booking_id }}</div>
+                <div class="cell-sub">{{ booking.created_at|date:"d M, H:i" }}</div>
+              </td>
+              <td>
+                <div class="cell-main">{{ booking.contact_name }}</div>
+                <div class="cell-sub">{{ booking.contact_phone }}</div>
+              </td>
+              <td>
+                <div class="cell-main">{{ booking.schedule.route.source }} → {{ booking.schedule.route.destination }}</div>
+                <div class="cell-sub">{{ booking.journey_date|date:"d M Y" }} · {{ booking.schedule.departure_time|time:"H:i" }}</div>
+              </td>
+              <td class="cell-main">₹{{ booking.total_amount|floatformat:0|intcomma }}</td>
+              <td><span class="status-pill status-{{ booking.status|lower }}">{{ booking.get_status_display }}</span></td>
+              <td class="text-end"><a href="{% url 'dashboard:booking_detail' booking.booking_id %}" class="icon-action" title="Open booking"><i class="fa-solid fa-arrow-right"></i></a></td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="6"><div class="table-empty"><i class="fa-solid fa-ticket"></i>No bookings yet. Once travellers book, they will appear here.</div></td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="d-flex flex-column gap-3">
+    <div class="panel">
+      <div class="panel-head"><div><h3>Upcoming departures</h3><p>Next six scheduled trips</p></div></div>
+      <div class="panel-body">
+        <ul class="dash-list">
+          {% for schedule in upcoming %}
+            <li class="dash-list-item">
+              <span class="dl-icon" style="background:#e8f0fb;color:#12315f;"><i class="fa-solid fa-bus-simple"></i></span>
+              <div class="min-w-0">
+                <div class="dl-title">{{ schedule.route.source }} → {{ schedule.route.destination }}</div>
+                <div class="dl-sub">{{ schedule.travel_date|date:"d M" }} · {{ schedule.departure_time|time:"H:i" }} · {{ schedule.bus.operator.name }}</div>
+                <div class="occupancy-bar mt-1" style="width:130px;"><span style="width: {{ schedule.occupancy_percent }}%;"></span></div>
+              </div>
+              <div class="dl-right">
+                {{ schedule.available_seat_count }}<br><span class="dl-sub">seats left</span>
+              </div>
+            </li>
+          {% empty %}
+            <li class="table-empty"><i class="fa-regular fa-calendar"></i>No upcoming departures scheduled.</li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><div><h3>Recent cancellations</h3></div><a href="{% url 'dashboard:cancellation_list' %}" class="btn btn-outline-navy btn-sm">Review</a></div>
+      <div class="panel-body">
+        <ul class="dash-list">
+          {% for cancellation in recent_cancellations %}
+            <li class="dash-list-item">
+              <span class="dl-icon" style="background:var(--red-soft);color:var(--red);"><i class="fa-solid fa-rotate-left"></i></span>
+              <div>
+                <div class="dl-title">{{ cancellation.booking.booking_id }}</div>
+                <div class="dl-sub">{{ cancellation.booking.user.get_full_name|default:cancellation.booking.user.username }} · {{ cancellation.requested_at|date:"d M, H:i" }}</div>
+              </div>
+              <div class="dl-right">₹{{ cancellation.refund_amount|floatformat:0|intcomma }}<br><span class="dl-sub">{{ cancellation.get_status_display }}</span></div>
+            </li>
+          {% empty %}
+            <li class="table-empty"><i class="fa-solid fa-circle-check"></i>No cancellation requests. All clear!</li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+  {{ charts_json|json_script:"chartsData" }}
+  <script src="{% static 'vendor/chartjs/chart.umd.min.js' %}"></script>
+{% endblock %}

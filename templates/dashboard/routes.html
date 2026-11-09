@@ -1,0 +1,86 @@
+{% extends "dashboard/base_dashboard.html" %}
+{% load static humanize %}
+
+{% block title %}Routes{% endblock %}
+{% block page_title %}Route network{% endblock %}
+{% block page_sub %}Curate the city pairs travellers can search and book{% endblock %}
+
+{% block content %}
+<div class="dash-page-head">
+  <div>
+    <h1>Routes</h1>
+    <p>{{ page_obj.paginator.count }} route{{ page_obj.paginator.count|pluralize }} configured.</p>
+  </div>
+  <a href="{% url 'dashboard:route_add' %}" class="btn btn-brand"><i class="fa-solid fa-plus"></i> Add route</a>
+</div>
+
+<div class="table-card">
+  <div class="table-toolbar">
+    <h3><i class="fa-solid fa-route text-red"></i> All routes</h3>
+    <form method="get" class="filters">
+      <div class="dash-search">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input type="search" name="q" value="{{ query }}" class="form-control search-input" placeholder="Search source or destination">
+      </div>
+      <button class="btn btn-outline-navy btn-sm" type="submit">Search</button>
+      {% if query %}<a href="{% url 'dashboard:route_list' %}" class="btn btn-outline-navy btn-sm">Reset</a>{% endif %}
+    </form>
+  </div>
+  <div class="table-responsive">
+    <table class="dash-table">
+      <thead>
+        <tr><th>Route</th><th>Distance</th><th>Duration</th><th>Base fare</th><th>Schedules</th><th>Flags</th><th class="text-end">Actions</th></tr>
+      </thead>
+      <tbody>
+        {% for route in page_obj %}
+          <tr>
+            <td>
+              <div class="d-flex align-items-center gap-2">
+                <img src="{{ route.image_url }}" alt="" class="table-img" onerror="this.onerror=null;this.src='{% static 'images/route-mountain.jpg' %}'">
+                <div>
+                  <div class="cell-main">{{ route.source }} <i class="fa-solid fa-arrow-right text-red"></i> {{ route.destination }}</div>
+                  <div class="cell-sub">{{ route.distance_km }} km corridor</div>
+                </div>
+              </div>
+            </td>
+            <td class="cell-main">{{ route.distance_km }} km</td>
+            <td>{{ route.duration_display }}</td>
+            <td class="cell-main">₹{{ route.base_fare|floatformat:0|intcomma }}</td>
+            <td><span class="chip">{{ route.schedule_count }} scheduled</span></td>
+            <td>
+              {% if route.is_popular %}<span class="chip chip-gold"><i class="fa-solid fa-fire"></i> Popular</span>{% endif %}
+              {% if route.is_active %}<span class="status-pill status-confirmed">Active</span>{% else %}<span class="status-pill status-cancelled">Inactive</span>{% endif %}
+            </td>
+            <td>
+              <div class="actions">
+                <a href="{% url 'dashboard:route_edit' route.pk %}" class="icon-action" title="Edit"><i class="fa-solid fa-pen"></i></a>
+                <form method="post" action="{% url 'dashboard:route_delete' route.pk %}" data-confirm="Delete route {{ route.source }} → {{ route.destination }}?">
+                  {% csrf_token %}
+                  <button type="submit" class="icon-action danger" title="Delete"><i class="fa-solid fa-trash"></i></button>
+                </form>
+              </div>
+            </td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="7"><div class="table-empty"><i class="fa-solid fa-route"></i>No routes found. Add a city pair to start selling tickets.</div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% if page_obj.paginator.num_pages > 1 %}
+    <div class="table-footer">
+      <span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }} · {{ page_obj.paginator.count }} total</span>
+      <nav>
+        <ul class="pagination pagination-sm mb-0">
+          {% if page_obj.has_previous %}<li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query|urlencode }}{% endif %}"><i class="fa-solid fa-chevron-left"></i></a></li>{% else %}<li class="page-item disabled"><span class="page-link"><i class="fa-solid fa-chevron-left"></i></span></li>{% endif %}
+          {% for num in page_obj.paginator.page_range %}
+            {% if num == page_obj.number %}<li class="page-item active"><span class="page-link">{{ num }}</span></li>
+            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}<li class="page-item"><a class="page-link" href="?page={{ num }}{% if query %}&q={{ query|urlencode }}{% endif %}">{{ num }}</a></li>{% endif %}
+          {% endfor %}
+          {% if page_obj.has_next %}<li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}{% if query %}&q={{ query|urlencode }}{% endif %}"><i class="fa-solid fa-chevron-right"></i></a></li>{% else %}<li class="page-item disabled"><span class="page-link"><i class="fa-solid fa-chevron-right"></i></span></li>{% endif %}
+        </ul>
+      </nav>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

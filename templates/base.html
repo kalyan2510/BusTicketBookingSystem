@@ -1,0 +1,207 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="{% block meta_description %}BUSGO — book bus tickets online across India. Compare operators, pick your seat, pay securely and get instant QR e-tickets.{% endblock %}">
+  <meta name="theme-color" content="#081c36">
+  <title>{% block title %}BUSGO — Online Bus Booking{% endblock %}</title>
+  <link rel="icon" type="image/svg+xml" href="{% static 'images/favicon.svg' %}">
+  <link rel="stylesheet" href="{% static 'vendor/bootstrap/bootstrap.min.css' %}">
+  <link rel="stylesheet" href="{% static 'vendor/fontawesome/css/all.min.css' %}">
+  <link rel="stylesheet" href="{% static 'vendor/fonts/fonts.css' %}">
+  <link rel="stylesheet" href="{% static 'css/base.css' %}">
+  <link rel="stylesheet" href="{% static 'css/components.css' %}">
+  <link rel="stylesheet" href="{% static 'css/pages.css' %}">
+  <link rel="stylesheet" href="{% static 'css/responsive.css' %}">
+  {% block extra_css %}{% endblock %}
+</head>
+<body class="{% block body_class %}{% endblock %}">
+  <a href="#mainContent" class="visually-hidden-focusable">Skip to content</a>
+
+  <!-- Top utility bar -->
+  <div class="topbar">
+    <div class="container-xxl">
+      <div class="topbar-inner">
+        <div class="topbar-left">
+          <a href="tel:{{ SITE_PHONE|cut:' ' }}" class="hide-md"><i class="fa-solid fa-phone"></i> {{ SITE_PHONE }}</a>
+          <a href="mailto:{{ SITE_EMAIL }}" class="hide-md"><i class="fa-solid fa-envelope"></i> {{ SITE_EMAIL }}</a>
+          <span class="offer-tag d-none d-lg-inline"><i class="fa-solid fa-bolt"></i> Use code <strong>BUSGO15</strong> — 15% off your first trip</span>
+        </div>
+        <div class="topbar-right">
+          <span class="d-none d-md-inline"><i class="fa-solid fa-headset"></i> 24×7 travel support</span>
+          <div class="topbar-social d-flex gap-2">
+            <a href="https://facebook.com" target="_blank" rel="noopener" aria-label="BUSGO on Facebook"><i class="fa-brands fa-facebook-f"></i></a>
+            <a href="https://instagram.com" target="_blank" rel="noopener" aria-label="BUSGO on Instagram"><i class="fa-brands fa-instagram"></i></a>
+            <a href="https://x.com" target="_blank" rel="noopener" aria-label="BUSGO on X"><i class="fa-brands fa-x-twitter"></i></a>
+            <a href="https://youtube.com" target="_blank" rel="noopener" aria-label="BUSGO on YouTube"><i class="fa-brands fa-youtube"></i></a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Header -->
+  <header class="site-header" id="siteHeader">
+    <nav class="navbar navbar-expand-lg">
+      <div class="container-xxl">
+        <a class="brand" href="{% url 'buses:home' %}">
+          <img src="{% static 'images/logo.svg' %}" alt="BUSGO bus logo" class="brand-logo" width="46" height="46">
+          <span class="brand-text">
+            <span class="brand-name">BUS<span>GO</span></span>
+            <span class="brand-sub">Online Bus Booking</span>
+          </span>
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav" aria-controls="mainNav" aria-expanded="false" aria-label="Toggle navigation">
+          <i class="fa-solid fa-bars"></i>
+        </button>
+        <div class="collapse navbar-collapse" id="mainNav">
+          <ul class="navbar-nav mx-lg-auto mb-2 mb-lg-0">
+            <li class="nav-item"><a class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}" href="{% url 'buses:home' %}"><i class="fa-solid fa-house d-lg-none me-2"></i>Home</a></li>
+            <li class="nav-item"><a class="nav-link {% if request.resolver_match.url_name == 'search' or request.resolver_match.url_name == 'bus_details' %}active{% endif %}" href="{% url 'buses:search' %}"><i class="fa-solid fa-magnifying-glass d-lg-none me-2"></i>Search Buses</a></li>
+            <li class="nav-item"><a class="nav-link {% if request.resolver_match.url_name == 'my_bookings' or request.resolver_match.url_name == 'ticket' %}active{% endif %}" href="{% if user.is_authenticated %}{% url 'bookings:my_bookings' %}{% else %}{% url 'accounts:login' %}?next={% url 'bookings:my_bookings' %}{% endif %}"><i class="fa-solid fa-ticket d-lg-none me-2"></i>My Bookings</a></li>
+            <li class="nav-item"><a class="nav-link {% if request.resolver_match.url_name == 'about' %}active{% endif %}" href="{% url 'about' %}"><i class="fa-solid fa-circle-info d-lg-none me-2"></i>About Us</a></li>
+            <li class="nav-item"><a class="nav-link {% if request.resolver_match.url_name == 'contact' %}active{% endif %}" href="{% url 'contact' %}"><i class="fa-solid fa-envelope d-lg-none me-2"></i>Contact</a></li>
+          </ul>
+          <div class="nav-actions">
+            {% if user.is_authenticated %}
+              <div class="dropdown">
+                <button class="profile-toggle dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                  <img src="{{ user.profile.avatar_url }}" alt="{{ user.profile.display_name }} avatar" class="avatar-sm" onerror="this.onerror=null;this.src='{% static 'images/avatar-default.svg' %}'">
+                  <span class="profile-name">{{ user.profile.display_name|default:user.username }}</span>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                  <li><h6 class="dropdown-header">Signed in as {{ user.email|default:user.username }}</h6></li>
+                  <li><a class="dropdown-item" href="{% url 'bookings:my_bookings' %}"><i class="fa-solid fa-ticket"></i> My bookings</a></li>
+                  <li><a class="dropdown-item" href="{% url 'accounts:profile' %}"><i class="fa-regular fa-user"></i> My profile</a></li>
+                  {% if user.is_staff %}
+                    <li><a class="dropdown-item" href="{% url 'dashboard:home' %}"><i class="fa-solid fa-chart-line"></i> Operations dashboard</a></li>
+                    <li><a class="dropdown-item" href="/admin/"><i class="fa-solid fa-shield-halved"></i> Django admin</a></li>
+                  {% endif %}
+                  <li><hr class="dropdown-divider"></li>
+                  <li>
+                    <form method="post" action="{% url 'accounts:logout' %}">
+                      {% csrf_token %}
+                      <button type="submit" class="dropdown-item text-danger"><i class="fa-solid fa-arrow-right-from-bracket"></i> Sign out</button>
+                    </form>
+                  </li>
+                </ul>
+              </div>
+            {% else %}
+              <a href="{% url 'accounts:login' %}{% if request.path != '/' %}?next={{ request.get_full_path|urlencode }}{% endif %}" class="btn btn-ghost btn-sm"><i class="fa-regular fa-user"></i> Login</a>
+              <a href="{% url 'accounts:register' %}" class="btn btn-brand btn-sm">Register <i class="fa-solid fa-arrow-right"></i></a>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  {% if messages %}
+    <div class="container-xxl mt-3">
+      {% for message in messages %}
+        <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show" role="alert">
+          <span class="alert-icon">
+            {% if message.tags == 'success' %}<i class="fa-solid fa-circle-check"></i>
+            {% elif message.tags == 'danger' %}<i class="fa-solid fa-circle-exclamation"></i>
+            {% elif message.tags == 'warning' %}<i class="fa-solid fa-triangle-exclamation"></i>
+            {% else %}<i class="fa-solid fa-circle-info"></i>{% endif %}
+          </span>
+          <span>{{ message }}</span>
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <main id="mainContent">
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="container-xxl">
+      <div class="row g-4 g-lg-5">
+        <div class="col-lg-4 col-md-6">
+          <div class="footer-brand">
+            <a class="brand" href="{% url 'buses:home' %}">
+              <img src="{% static 'images/logo.svg' %}" alt="BUSGO logo" class="brand-logo" width="46" height="46">
+              <span class="brand-text">
+                <span class="brand-name">BUS<span>GO</span></span>
+                <span class="brand-sub">Online Bus Booking</span>
+              </span>
+            </a>
+          </div>
+          <p class="footer-about">Your journey, our priority. BUSGO brings India's trusted bus operators onto one beautiful platform — compare, choose your seat and travel with confidence.</p>
+          <div class="footer-contact">
+            <div class="fc-item"><i class="fa-solid fa-location-dot"></i><span>{{ SITE_ADDRESS }}</span></div>
+            <div class="fc-item"><i class="fa-solid fa-phone"></i><a href="tel:{{ SITE_PHONE|cut:' ' }}">{{ SITE_PHONE }}</a></div>
+            <div class="fc-item"><i class="fa-solid fa-envelope"></i><a href="mailto:{{ SITE_EMAIL }}">{{ SITE_EMAIL }}</a></div>
+          </div>
+          <div class="footer-social">
+            <a href="https://facebook.com" target="_blank" rel="noopener" aria-label="Facebook"><i class="fa-brands fa-facebook-f"></i></a>
+            <a href="https://instagram.com" target="_blank" rel="noopener" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
+            <a href="https://x.com" target="_blank" rel="noopener" aria-label="X"><i class="fa-brands fa-x-twitter"></i></a>
+            <a href="https://youtube.com" target="_blank" rel="noopener" aria-label="YouTube"><i class="fa-brands fa-youtube"></i></a>
+            <a href="https://linkedin.com" target="_blank" rel="noopener" aria-label="LinkedIn"><i class="fa-brands fa-linkedin-in"></i></a>
+          </div>
+        </div>
+        <div class="col-lg-2 col-md-3 col-6">
+          <h4 class="footer-title">Explore</h4>
+          <ul class="footer-links">
+            <li><a href="{% url 'buses:home' %}">Home</a></li>
+            <li><a href="{% url 'buses:search' %}">Search buses</a></li>
+            <li><a href="{% url 'bookings:my_bookings' %}">My bookings</a></li>
+            <li><a href="{% url 'about' %}">About BUSGO</a></li>
+            <li><a href="{% url 'contact' %}">Contact us</a></li>
+          </ul>
+        </div>
+        <div class="col-lg-2 col-md-3 col-6">
+          <h4 class="footer-title">Support</h4>
+          <ul class="footer-links">
+            <li><a href="{% url 'policies' %}#cancellation">Cancellation policy</a></li>
+            <li><a href="{% url 'policies' %}#refunds">Refund policy</a></li>
+            <li><a href="{% url 'policies' %}#terms">Terms of service</a></li>
+            <li><a href="{% url 'policies' %}#privacy">Privacy policy</a></li>
+            <li><a href="{% url 'contact' %}#faq">Help centre</a></li>
+          </ul>
+        </div>
+        <div class="col-lg-4 col-md-12">
+          <h4 class="footer-title">Travel deals in your inbox</h4>
+          <p class="footer-about mb-3">Join 50,000+ smart travellers. Route launches, fare drops and weekend offers — no spam, ever.</p>
+          <form method="post" action="{% url 'buses:newsletter_subscribe' %}" class="footer-newsletter">
+            {% csrf_token %}
+            <div class="input-group">
+              <input type="email" name="email" class="form-control" placeholder="Enter your email address" aria-label="Email address" required>
+              <button class="btn btn-brand ms-2" type="submit" aria-label="Subscribe"><i class="fa-solid fa-paper-plane"></i></button>
+            </div>
+          </form>
+          <div class="footer-badges">
+            <span><i class="fa-solid fa-lock"></i> 256-bit SSL</span>
+            <span><i class="fa-solid fa-shield-halved"></i> PCI-DSS ready</span>
+            <span><i class="fa-solid fa-check-double"></i> Verified operators</span>
+          </div>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <div class="footer-bottom-inner">
+          <span>© {{ CURRENT_YEAR }} BUSGO Travel Technologies Pvt. Ltd. All rights reserved.</span>
+          <span class="d-flex align-items-center gap-3 flex-wrap">
+            <a href="{% url 'policies' %}#terms">Terms</a>
+            <a href="{% url 'policies' %}#privacy">Privacy</a>
+            <a href="{% url 'policies' %}#refunds">Refunds</a>
+            <span>Made with <i class="fa-solid fa-heart text-red"></i> for travellers in India</span>
+          </span>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <button class="back-to-top" id="backToTop" type="button" aria-label="Back to top"><i class="fa-solid fa-arrow-up"></i></button>
+
+  <script src="{% static 'vendor/bootstrap/bootstrap.bundle.min.js' %}"></script>
+  <script src="{% static 'js/main.js' %}"></script>
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

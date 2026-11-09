@@ -1,0 +1,323 @@
+{% extends "base.html" %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}BUSGO — Book Bus Tickets Online in India{% endblock %}
+
+{% block content %}
+<!-- Hero -->
+<section class="hero">
+  <div class="container-xxl">
+    <div class="hero-grid">
+      <div class="hero-copy">
+        <span class="hero-badge"><span class="dot"></span> India's premium bus booking experience</span>
+        <h1>Your Journey,<br><span class="accent">Our Priority.</span></h1>
+        <p class="hero-sub">Book your bus tickets easily, safely and quickly. Compare trusted operators, choose your perfect seat and get an instant QR e-ticket.</p>
+        <div class="hero-points">
+          <span><i class="fa-solid fa-circle-check"></i> 100% verified operators</span>
+          <span><i class="fa-solid fa-circle-check"></i> Free cancellation up to 24h</span>
+          <span><i class="fa-solid fa-circle-check"></i> Instant e-ticket</span>
+        </div>
+        <div class="hero-route-chips">
+          <span class="label">Trending:</span>
+          {% for route in popular_routes|slice:":4" %}
+            <a href="{% url 'buses:search' %}?from={{ route.source|urlencode }}&to={{ route.destination|urlencode }}&date={{ today|date:'Y-m-d' }}">{{ route.source }} → {{ route.destination }}</a>
+          {% empty %}
+            <a href="{% url 'buses:search' %}">Explore all routes</a>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="search-card">
+        <div class="search-card-head">
+          <div>
+            <h3>Book your journey</h3>
+            <p>One-way · Choose from 500+ daily departures</p>
+          </div>
+          <div class="search-icon"><i class="fa-solid fa-bus-simple"></i></div>
+        </div>
+        <form class="search-form" method="get" action="{% url 'buses:search' %}">
+          <div class="search-row">
+            <div class="search-field">
+              <label for="homeFrom"><i class="fa-solid fa-location-dot"></i> From</label>
+              <select class="form-select" id="homeFrom" name="from" required>
+                <option value="">Select source city</option>
+                {% for city in cities %}<option value="{{ city }}">{{ city }}</option>{% endfor %}
+              </select>
+            </div>
+            <button class="swap-btn" type="button" data-swap aria-label="Swap source and destination" title="Swap cities"><i class="fa-solid fa-right-left"></i></button>
+            <div class="search-field">
+              <label for="homeTo"><i class="fa-solid fa-location-arrow"></i> To</label>
+              <select class="form-select" id="homeTo" name="to" required>
+                <option value="">Select destination</option>
+                {% for city in cities %}<option value="{{ city }}">{{ city }}</option>{% endfor %}
+              </select>
+            </div>
+          </div>
+          <div class="search-field">
+            <label for="homeDate"><i class="fa-regular fa-calendar-days"></i> Journey date</label>
+            <input type="date" class="form-control" id="homeDate" name="date" value="{{ today|date:'Y-m-d' }}" min="{{ today|date:'Y-m-d' }}" required>
+          </div>
+          <button type="submit" class="btn btn-brand search-submit">
+            <i class="fa-solid fa-magnifying-glass"></i> Search Buses
+          </button>
+        </form>
+        <div class="search-trust">
+          <span><i class="fa-solid fa-lock"></i> Secure payments</span>
+          <span><i class="fa-solid fa-rotate-left"></i> Easy cancellations</span>
+          <span><i class="fa-solid fa-bolt"></i> Instant confirmation</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Stats strip -->
+<div class="stats-strip">
+  <div class="container-xxl">
+    <div class="stats-card">
+      <div class="stat-item">
+        <div class="stat-icon red"><i class="fa-solid fa-bus-simple"></i></div>
+        <div><div class="stat-number" data-count="{{ stats.buses }}">0</div><div class="stat-label">Premium buses</div></div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-icon navy"><i class="fa-solid fa-route"></i></div>
+        <div><div class="stat-number" data-count="{{ stats.routes }}">0</div><div class="stat-label">Live routes</div></div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-icon gold"><i class="fa-solid fa-users"></i></div>
+        <div><div class="stat-number" data-count="{{ stats.travellers }}" data-suffix="+">0</div><div class="stat-label">Happy travellers</div></div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-icon green"><i class="fa-solid fa-ticket"></i></div>
+        <div><div class="stat-number" data-count="{{ stats.bookings }}">0</div><div class="stat-label">Tickets booked</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Popular routes -->
+<section class="section" id="routes">
+  <div class="container-xxl">
+    <div class="section-head">
+      <div class="reveal">
+        <span class="eyebrow">Popular routes</span>
+        <h2 class="section-title">Where are you headed next?</h2>
+        <p class="section-sub mb-0">Handpicked corridors loved by our travellers — with frequent departures and fares that make sense.</p>
+      </div>
+      <a href="{% url 'buses:search' %}" class="btn btn-outline-navy reveal">Explore all routes <i class="fa-solid fa-arrow-right"></i></a>
+    </div>
+    <div class="route-grid">
+      {% for route in popular_routes %}
+        <a href="{% url 'buses:search' %}?from={{ route.source|urlencode }}&to={{ route.destination|urlencode }}&date={{ today|date:'Y-m-d' }}" class="route-card reveal {% cycle '' 'reveal-delay-1' 'reveal-delay-2' %}">
+          <img src="{{ route.image_url }}" alt="{{ route.source }} to {{ route.destination }}" loading="lazy" onerror="this.onerror=null;this.src='{% static 'images/about-travel.jpg' %}'">
+          <span class="route-price">from ₹{% if route.min_fare %}{{ route.min_fare|floatformat:0 }}{% else %}{{ route.base_fare|floatformat:0 }}{% endif %}</span>
+          <div class="route-card-body">
+            <div>
+              <h4>{{ route.source }} <i class="fa-solid fa-arrow-right"></i> {{ route.destination }}</h4>
+              <div class="route-sub">{{ route.duration_display }} · {{ route.distance_km }} km · {{ route.schedules.count }} schedules</div>
+            </div>
+            <span class="route-arrow"><i class="fa-solid fa-arrow-right"></i></span>
+          </div>
+        </a>
+      {% empty %}
+        <div class="empty-state" style="grid-column:1/-1;">
+          <div class="empty-icon"><i class="fa-solid fa-route"></i></div>
+          <h3>Routes are being prepared</h3>
+          <p>Run the seed command to load demo routes, or add routes from the operations dashboard.</p>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- Featured buses -->
+<section class="section" style="background:#fff;">
+  <div class="container-xxl">
+    <div class="section-head">
+      <div class="reveal">
+        <span class="eyebrow">Featured departures</span>
+        <h2 class="section-title">Premium buses, ready to roll</h2>
+        <p class="section-sub mb-0">Freshly sanitised coaches, verified captains and live tracking on every trip.</p>
+      </div>
+      <a href="{% url 'buses:search' %}" class="btn btn-outline-navy reveal">See all buses <i class="fa-solid fa-arrow-right"></i></a>
+    </div>
+    <div class="featured-grid">
+      {% for schedule in featured %}
+        <div class="reveal {% cycle '' 'reveal-delay-1' %}">
+          {% include "includes/bus_card.html" with schedule=schedule compact=True %}
+        </div>
+      {% empty %}
+        <div class="empty-state" style="grid-column:1/-1;">
+          <div class="empty-icon"><i class="fa-solid fa-bus-simple"></i></div>
+          <h3>No departures loaded yet</h3>
+          <p>Add schedules from the dashboard or run <code>python manage.py seed_demo</code>.</p>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- Why choose -->
+<section class="section">
+  <div class="container-xxl">
+    <div class="section-head center reveal">
+      <span class="eyebrow center">Why BUSGO</span>
+      <h2 class="section-title">Travel smarter, not harder</h2>
+      <p class="section-sub">We sweat the small stuff so your journey feels effortless — from the first search to the final stop.</p>
+    </div>
+    <div class="feature-grid">
+      <div class="feature-card reveal">
+        <div class="feature-icon"><i class="fa-solid fa-shield-halved"></i></div>
+        <h3>Verified operators only</h3>
+        <p>Every partner is vetted for permits, safety records and service quality before going live.</p>
+      </div>
+      <div class="feature-card reveal reveal-delay-1">
+        <div class="feature-icon"><i class="fa-solid fa-chair"></i></div>
+        <h3>Real-time seat maps</h3>
+        <p>Pick window seats, lower berths or seats together — availability updates live, no surprises.</p>
+      </div>
+      <div class="feature-card reveal reveal-delay-2">
+        <div class="feature-icon"><i class="fa-solid fa-lock"></i></div>
+        <h3>Secure checkout</h3>
+        <p>Server-verified payments with UPI, cards, net banking and QR. Your card details never touch our servers.</p>
+      </div>
+      <div class="feature-card reveal">
+        <div class="feature-icon"><i class="fa-solid fa-qrcode"></i></div>
+        <h3>Instant QR e-ticket</h3>
+        <p>Paperless boarding with a scannable QR code and downloadable PDF ticket, the moment you pay.</p>
+      </div>
+      <div class="feature-card reveal reveal-delay-1">
+        <div class="feature-icon"><i class="fa-solid fa-rotate-left"></i></div>
+        <h3>Transparent cancellations</h3>
+        <p>Clear refund rules, automatic calculations and refunds back to your original payment method.</p>
+      </div>
+      <div class="feature-card reveal reveal-delay-2">
+        <div class="feature-icon"><i class="fa-solid fa-headset"></i></div>
+        <h3>Human support, 24×7</h3>
+        <p>Real travel experts on call and chat — before, during and after your journey.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Steps -->
+<section class="section" style="background:#fff;">
+  <div class="container-xxl">
+    <div class="section-head center reveal">
+      <span class="eyebrow center">How it works</span>
+      <h2 class="section-title">Booked in four easy steps</h2>
+      <p class="section-sub">From search to seat in under two minutes.</p>
+    </div>
+    <div class="steps-grid">
+      <div class="step-card reveal">
+        <div class="step-num">01<i class="fa-solid fa-magnifying-glass"></i></div>
+        <div><h3>Search your route</h3><p>Choose source, destination and travel date to see live departures.</p></div>
+      </div>
+      <div class="step-card reveal reveal-delay-1">
+        <div class="step-num">02<i class="fa-solid fa-chair"></i></div>
+        <div><h3>Pick your seats</h3><p>Explore the interactive deck map and select up to 6 seats.</p></div>
+      </div>
+      <div class="step-card reveal reveal-delay-2">
+        <div class="step-num">03<i class="fa-regular fa-credit-card"></i></div>
+        <div><h3>Pay securely</h3><p>Complete checkout with the payment method you prefer.</p></div>
+      </div>
+      <div class="step-card reveal reveal-delay-3">
+        <div class="step-num">04<i class="fa-solid fa-ticket"></i></div>
+        <div><h3>Board with QR</h3><p>Show your e-ticket, scan, and settle into your journey.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Offers -->
+<section class="section" id="offers">
+  <div class="container-xxl">
+    <div class="section-head">
+      <div class="reveal">
+        <span class="eyebrow">Travel offers</span>
+        <h2 class="section-title">A little extra for your next trip</h2>
+        <p class="section-sub mb-0">Tap a code to copy it, then apply at checkout.</p>
+      </div>
+    </div>
+    <div class="offers-grid">
+      {% for offer in offers %}
+        <div class="offer-card reveal {% cycle '' 'reveal-delay-1' 'reveal-delay-2' %}">
+          <img src="{% static offer.image %}" alt="{{ offer.title }}" loading="lazy" onerror="this.onerror=null;this.src='{% static 'images/offer-1.jpg' %}'">
+          <div>
+            <span class="offer-tag">{{ offer.tag }}</span>
+            <h3>{{ offer.title }}</h3>
+            <p>{{ offer.text }}</p>
+            <button type="button" class="offer-code" data-copy="{{ offer.code }}"><i class="fa-regular fa-copy"></i> {{ offer.code }}</button>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- Reviews -->
+<section class="section" style="background:#fff;">
+  <div class="container-xxl">
+    <div class="section-head center reveal">
+      <span class="eyebrow center">Traveller stories</span>
+      <h2 class="section-title">Loved by passengers across India</h2>
+      <p class="section-sub">Real reviews from verified BUSGO journeys.</p>
+    </div>
+    <div class="reviews-grid">
+      {% for review in reviews|slice:":3" %}
+        <div class="review-card reveal {% cycle '' 'reveal-delay-1' 'reveal-delay-2' %}">
+          <i class="fa-solid fa-quote-right review-quote"></i>
+          <div class="review-stars">
+            {% for i in "12345"|make_list %}{% if forloop.counter <= review.rating %}<i class="fa-solid fa-star"></i>{% else %}<i class="fa-regular fa-star"></i>{% endif %}{% endfor %}
+          </div>
+          <h4>{{ review.title|default:"A memorable journey" }}</h4>
+          <p class="review-text">{{ review.comment|truncatewords:30 }}</p>
+          <div class="reviewer">
+            <img src="{{ review.user.profile.avatar_url }}" alt="{{ review.user.first_name }}" onerror="this.onerror=null;this.src='{% static 'images/avatar-default.svg' %}'">
+            <div>
+              <div class="name">{{ review.user.get_full_name|default:review.user.username }}</div>
+              <div class="route">{% if review.schedule %}{{ review.schedule.route.source }} → {{ review.schedule.route.destination }}{% else %}Verified BUSGO traveller{% endif %}</div>
+            </div>
+          </div>
+        </div>
+      {% empty %}
+        <div class="empty-state" style="grid-column:1/-1;">
+          <div class="empty-icon"><i class="fa-regular fa-star"></i></div>
+          <h3>Be the first to share your story</h3>
+          <p>Complete a journey and leave a review from your bookings page.</p>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="section-sm">
+  <div class="container-xxl">
+    <div class="cta-band reveal">
+      <div class="row align-items-center g-4">
+        <div class="col-lg-8">
+          <span class="eyebrow" style="color:var(--gold);">Ready when you are</span>
+          <h2>Your next adventure is one search away.</h2>
+          <p>Compare fares, pick your favourite seat and travel with operators you can trust. No queues, no counters, no stress.</p>
+          <div class="cta-actions">
+            <a href="{% url 'buses:search' %}" class="btn btn-brand btn-lg"><i class="fa-solid fa-magnifying-glass"></i> Search buses</a>
+            <a href="{% url 'contact' %}" class="btn btn-white btn-lg"><i class="fa-solid fa-headset"></i> Talk to support</a>
+          </div>
+          <div class="cta-stats">
+            <div class="cta-stat"><div class="num">4.9/5</div><div class="lbl">Average traveller rating</div></div>
+            <div class="cta-stat"><div class="num">500+</div><div class="lbl">Daily departures</div></div>
+            <div class="cta-stat"><div class="num">24×7</div><div class="lbl">Human support</div></div>
+          </div>
+        </div>
+        <div class="col-lg-4 text-lg-end">
+          <div class="animate-float">
+            <img src="{% static 'images/logo.svg' %}" alt="BUSGO" width="120" height="120" style="filter:drop-shadow(0 20px 40px rgba(0,0,0,.35));">
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

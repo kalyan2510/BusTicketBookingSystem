@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block title %}Something went wrong — BUSGO{% endblock %}
+{% block meta_description %}An unexpected error occurred on BUSGO. Our team has been notified — please try again or contact support.{% endblock %}
+
+{% block content %}
+<section class="error-shell">
+  <div class="container-xxl">
+    <div class="error-card">
+      <div class="error-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+      <div class="error-code">500</div>
+      <h1>We hit a small bump in the road</h1>
+      <p>An unexpected error occurred while processing your request. Our engineering team has been notified. Please try again in a moment — your booking data is safe.</p>
+      <div class="error-actions">
+        <a href="{% url 'buses:home' %}" class="btn btn-brand"><i class="fa-solid fa-house"></i> Back to home</a>
+        <a href="{% url 'bookings:my_bookings' %}" class="btn btn-outline-navy"><i class="fa-solid fa-ticket"></i> My bookings</a>
+        <a href="{% url 'contact' %}" class="btn btn-outline-navy"><i class="fa-solid fa-headset"></i> Contact support</a>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

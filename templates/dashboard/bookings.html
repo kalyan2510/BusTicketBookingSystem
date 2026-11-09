@@ -1,0 +1,93 @@
+{% extends "dashboard/base_dashboard.html" %}
+{% load humanize %}
+
+{% block title %}Bookings{% endblock %}
+{% block page_title %}Booking desk{% endblock %}
+{% block page_sub %}Search, inspect and support every reservation on BUSGO{% endblock %}
+
+{% block content %}
+<div class="dash-page-head">
+  <div>
+    <h1>Bookings</h1>
+    <p>{{ page_obj.paginator.count }} booking{{ page_obj.paginator.count|pluralize }} match this view.</p>
+  </div>
+  <a href="{% url 'dashboard:schedule_list' %}" class="btn btn-outline-navy"><i class="fa-regular fa-calendar-days"></i> Schedules</a>
+</div>
+
+<div class="table-card">
+  <div class="table-toolbar">
+    <h3><i class="fa-solid fa-ticket text-red"></i> Reservation ledger</h3>
+    <form method="get" class="filters">
+      <div class="dash-search">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input type="search" name="q" value="{{ query }}" class="form-control search-input" placeholder="Booking, ticket, name, email or phone">
+      </div>
+      <select name="status" class="form-select" style="min-width:150px;">
+        <option value="">All statuses</option>
+        {% for value, label in status_choices %}
+          <option value="{{ value }}" {% if status == value %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+      <button class="btn btn-outline-navy btn-sm" type="submit">Filter</button>
+      {% if query or status %}<a href="{% url 'dashboard:booking_list' %}" class="btn btn-outline-navy btn-sm">Reset</a>{% endif %}
+    </form>
+  </div>
+  <div class="table-responsive">
+    <table class="dash-table">
+      <thead>
+        <tr><th>Booking</th><th>Traveller</th><th>Journey</th><th>Seats</th><th>Amount</th><th>Status</th><th class="text-end">Open</th></tr>
+      </thead>
+      <tbody>
+        {% for booking in page_obj %}
+          <tr>
+            <td>
+              <div class="booking-id-mono">{{ booking.booking_id }}</div>
+              <div class="cell-sub">{{ booking.created_at|date:"d M Y, H:i" }}</div>
+              {% if booking.ticket_number %}<div class="cell-sub">{{ booking.ticket_number }}</div>{% endif %}
+            </td>
+            <td>
+              <div class="cell-main">{{ booking.contact_name }}</div>
+              <div class="cell-sub">{{ booking.contact_phone }}</div>
+              <div class="cell-sub">{{ booking.contact_email }}</div>
+            </td>
+            <td>
+              <div class="cell-main">{{ booking.schedule.route.source }} → {{ booking.schedule.route.destination }}</div>
+              <div class="cell-sub">{{ booking.journey_date|date:"d M Y" }} · {{ booking.schedule.departure_time|time:"H:i" }}</div>
+              <div class="cell-sub">{{ booking.schedule.bus.operator.name }}</div>
+            </td>
+            <td>
+              <div class="cell-main">{{ booking.seats_summary|default:"—" }}</div>
+              <div class="cell-sub">{{ booking.passenger_count }} passenger{{ booking.passenger_count|pluralize }}</div>
+            </td>
+            <td>
+              <div class="cell-main">₹{{ booking.total_amount|floatformat:0|intcomma }}</div>
+              <div class="cell-sub">{{ booking.payment_status_label }}</div>
+            </td>
+            <td><span class="status-pill status-{{ booking.status|lower }}">{{ booking.get_status_display }}</span></td>
+            <td class="text-end">
+              <a href="{% url 'dashboard:booking_detail' booking.booking_id %}" class="icon-action" title="View booking"><i class="fa-solid fa-arrow-right"></i></a>
+            </td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="7"><div class="table-empty"><i class="fa-solid fa-ticket"></i>No bookings match your filters.</div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% if page_obj.paginator.num_pages > 1 %}
+    <div class="table-footer">
+      <span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }} · {{ page_obj.paginator.count }} total</span>
+      <nav>
+        <ul class="pagination pagination-sm mb-0">
+          {% if page_obj.has_previous %}<li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query|urlencode }}{% endif %}{% if status %}&status={{ status }}{% endif %}"><i class="fa-solid fa-chevron-left"></i></a></li>{% else %}<li class="page-item disabled"><span class="page-link"><i class="fa-solid fa-chevron-left"></i></span></li>{% endif %}
+          {% for num in page_obj.paginator.page_range %}
+            {% if num == page_obj.number %}<li class="page-item active"><span class="page-link">{{ num }}</span></li>
+            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}<li class="page-item"><a class="page-link" href="?page={{ num }}{% if query %}&q={{ query|urlencode }}{% endif %}{% if status %}&status={{ status }}{% endif %}">{{ num }}</a></li>{% endif %}
+          {% endfor %}
+          {% if page_obj.has_next %}<li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}{% if query %}&q={{ query|urlencode }}{% endif %}{% if status %}&status={{ status }}{% endif %}"><i class="fa-solid fa-chevron-right"></i></a></li>{% else %}<li class="page-item disabled"><span class="page-link"><i class="fa-solid fa-chevron-right"></i></span></li>{% endif %}
+        </ul>
+      </nav>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

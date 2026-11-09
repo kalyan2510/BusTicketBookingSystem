@@ -1,0 +1,61 @@
+{% extends "dashboard/base_dashboard.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+{% block page_sub %}{{ subtitle }}{% endblock %}
+
+{% block content %}
+<div class="dash-page-head">
+  <div>
+    <h1>{{ title }}</h1>
+    <p>{{ subtitle }}</p>
+  </div>
+  <a href="{{ cancel_url }}" class="btn btn-outline-navy"><i class="fa-solid fa-arrow-left"></i> Back to list</a>
+</div>
+
+<div class="dash-form-card">
+  <div class="dash-form-head">
+    <h1><i class="fa-solid fa-pen-to-square text-red"></i> {{ title }}</h1>
+    <p>Fields marked <span class="text-red">*</span> are required. Changes go live immediately.</p>
+  </div>
+  <form method="post" enctype="multipart/form-data" novalidate>
+    {% csrf_token %}
+    <div class="dash-form-body">
+      {% if form.non_field_errors %}
+        <div class="alert alert-danger">
+          <span class="alert-icon"><i class="fa-solid fa-circle-exclamation"></i></span>
+          <span>{% for error in form.non_field_errors %}{{ error }}{% if not forloop.last %}<br>{% endif %}{% endfor %}</span>
+        </div>
+      {% endif %}
+
+      <div class="row g-3">
+        {% for field in form.visible_fields %}
+          <div class="{% if field.field.widget.input_type == 'checkbox' %}col-md-6{% elif field.name == 'description' or field.name == 'amenities' or field.name == 'admin_note' %}col-12{% else %}col-md-6{% endif %}">
+            {% if field.field.widget.input_type == 'checkbox' %}
+              <div class="form-check mt-4">
+                {{ field }}
+                <label class="form-check-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+              </div>
+            {% else %}
+              <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} <span class="text-red">*</span>{% endif %}</label>
+              {{ field }}
+            {% endif %}
+            {% if field.help_text %}<div class="form-help">{{ field.help_text }}</div>{% endif %}
+            {% for error in field.errors %}<div class="text-red fs-13 mt-1"><i class="fa-solid fa-circle-exclamation"></i> {{ error }}</div>{% endfor %}
+          </div>
+        {% endfor %}
+      </div>
+
+      <div class="dash-note mt-4">
+        <i class="fa-solid fa-circle-info"></i>
+        <span>Need help with these fields? Contact the platform administrator. All times are in IST and fares are in Indian Rupees (₹).</span>
+      </div>
+
+      <div class="dash-form-actions">
+        <button type="submit" class="btn btn-brand"><i class="fa-solid fa-floppy-disk"></i> Save changes</button>
+        <a href="{{ cancel_url }}" class="btn btn-outline-navy">Cancel</a>
+      </div>
+    </div>
+  </form>
+</div>
+{% endblock %}

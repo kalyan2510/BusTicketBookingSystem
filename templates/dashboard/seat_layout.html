@@ -1,0 +1,115 @@
+{% extends "dashboard/base_dashboard.html" %}
+{% load static %}
+
+{% block title %}Seat layout · {{ schedule.pk }}{% endblock %}
+{% block page_title %}Seat inventory{% endblock %}
+{% block page_sub %}{{ schedule.route.source }} → {{ schedule.route.destination }} · {{ schedule.travel_date|date:"d M Y" }}{% endblock %}
+
+{% block content %}
+<div class="dash-page-head">
+  <div>
+    <h1>Seat layout</h1>
+    <p>
+      {{ schedule.bus.name }} · {{ schedule.bus.get_layout_display }} ·
+      {{ schedule.departure_time|time:"H:i" }} → {{ schedule.arrival_time|time:"H:i" }} ·
+      {{ schedule.seats.count }} seat{{ schedule.seats.count|pluralize }}
+    </p>
+  </div>
+  <div class="d-flex gap-2 flex-wrap">
+    <a href="{% url 'dashboard:schedule_edit' schedule.pk %}" class="btn btn-outline-navy"><i class="fa-solid fa-pen"></i> Edit schedule</a>
+    <a href="{% url 'dashboard:schedule_list' %}" class="btn btn-outline-navy"><i class="fa-solid fa-arrow-left"></i> Back</a>
+  </div>
+</div>
+
+<div class="row g-3 mb-3">
+  <div class="col-md-4">
+    <div class="detail-block h-100">
+      <div class="lbl">Departure</div>
+      <div class="val">{{ schedule.travel_date|date:"D, d M Y" }} · {{ schedule.departure_time|time:"H:i" }}</div>
+      <div class="cell-sub mt-1">{{ schedule.route.source }} → {{ schedule.route.destination }}</div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="detail-block h-100">
+      <div class="lbl">Fare per seat</div>
+      <div class="val">₹{{ schedule.fare|floatformat:0 }}</div>
+      <div class="cell-sub mt-1">{{ schedule.bus.operator.name }}</div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="detail-block h-100">
+      <div class="lbl">Availability</div>
+      <div class="val">{{ schedule.available_seat_count }} of {{ schedule.total_seat_count }} free</div>
+      <div class="occupancy-bar mt-2"><span style="width: {{ schedule.occupancy_percent }}%;"></span></div>
+    </div>
+  </div>
+</div>
+
+<div class="panel">
+  <div class="panel-head">
+    <div>
+      <h3><i class="fa-solid fa-chair text-red"></i> Interactive seat map</h3>
+      <p>Select free seats to block or re-open them. Booked seats are locked automatically.</p>
+    </div>
+    <form method="post" action="{% url 'dashboard:seat_layout_action' schedule.pk %}" data-confirm="Regenerate the seat layout? Only possible when no bookings reference this schedule.">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="regenerate">
+      <button type="submit" class="btn btn-outline-navy btn-sm"><i class="fa-solid fa-rotate"></i> Regenerate layout</button>
+    </form>
+  </div>
+  <div class="panel-body">
+    <form method="post" action="{% url 'dashboard:seat_layout_action' schedule.pk %}" id="seatAdminForm">
+      {% csrf_token %}
+      <div class="seat-admin-grid">
+        {% for deck, seats in decks.items %}
+          <div class="seat-admin-deck">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+              <h3 class="mb-0">{{ deck }} deck</h3>
+              <button type="button" class="btn btn-link btn-sm p-0 text-navy" data-toggle-deck>Select all free</button>
+            </div>
+            <div class="seat-admin-seats">
+              {% for item in seats %}
+                <div class="seat-admin-item {% if item.booked %}booked{% elif not item.seat.is_active %}blocked{% endif %}">
+                  <input type="checkbox" name="seat_ids" value="{{ item.seat.id }}" id="seat-{{ item.seat.id }}" {% if item.booked %}disabled{% endif %}>
+                  <label for="seat-{{ item.seat.id }}" title="{{ item.seat.seat_number }}{% if item.seat.is_window %} · Window{% endif %}{% if item.booked %} · Booked{% elif not item.seat.is_active %} · Blocked{% endif %}">
+                    {{ item.seat.seat_number }}
+                    {% if item.booked %}<i class="fa-solid fa-lock" style="font-size:.5rem;"></i>{% endif %}
+                  </label>
+                </div>
+              {% endfor %}
+            </div>
+          </div>
+        {% empty %}
+          <div class="table-empty"><i class="fa-solid fa-chair"></i>No seats generated for this schedule yet.</div>
+        {% endfor %}
+      </div>
+
+      <div class="seat-admin-legend">
+        <span><span class="sw sw-green"></span> Available</span>
+        <span><span class="sw sw-red"></span> Booked / locked</span>
+        <span><span class="sw sw-grey"></span> Blocked by staff</span>
+      </div>
+
+      <div class="dash-form-actions">
+        <button type="submit" name="action" value="block" class="btn btn-soft-red"><i class="fa-solid fa-ban"></i> Block selected seats</button>
+        <button type="submit" name="action" value="unblock" class="btn btn-outline-navy"><i class="fa-solid fa-lock-open"></i> Re-open selected seats</button>
+        <a href="{% url 'dashboard:schedule_list' %}" class="btn btn-outline-navy">Done</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  document.querySelectorAll("[data-toggle-deck]").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var deck = btn.closest(".seat-admin-deck");
+      var boxes = deck.querySelectorAll('input[type="checkbox"]:not(:disabled)');
+      var allChecked = Array.prototype.every.call(boxes, function (b) { return b.checked; });
+      boxes.forEach(function (b) { b.checked = !allChecked; });
+      btn.textContent = allChecked ? "Select all free" : "Clear selection";
+    });
+  });
+</script>
+{% endblock %}

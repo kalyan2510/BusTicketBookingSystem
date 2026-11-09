@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Booking {{ booking.booking_id }} — BUSGO{% endblock %}
+
+{% block content %}
+<section class="page-hero">
+  <div class="container-xxl">
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'buses:home' %}">Home</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'bookings:my_bookings' %}">My bookings</a></li>
+        <li class="breadcrumb-item active" aria-current="page">{{ booking.booking_id }}</li>
+      </ol>
+    </nav>
+    <h1>Booking {{ booking.booking_id }}</h1>
+    <p>{{ booking.route_text }} · {{ booking.journey_date|date:"D, d M Y" }} · {{ booking.get_status_display }}</p>
+  </div>
+</section>
+
+<section class="bookings-wrap">
+  <div class="container-xxl">
+    <div class="booking-detail-grid">
+      <div>
+        <div class="panel mb-3">
+          <div class="panel-head">
+            <div><h3>Journey details</h3><p>Everything about this reservation.</p></div>
+            <span class="status-pill status-{{ booking.status|lower }}">{{ booking.get_status_display }}</span>
+          </div>
+          <div class="panel-body">
+            <div class="journey-facts">
+              <div class="journey-fact"><div class="lbl">From</div><div class="val">{{ booking.journey_source|default:booking.schedule.route.source }}</div></div>
+              <div class="journey-fact"><div class="lbl">To</div><div class="val">{{ booking.journey_destination|default:booking.schedule.route.destination }}</div></div>
+              <div class="journey-fact"><div class="lbl">Journey date</div><div class="val">{{ booking.journey_date|date:"d M Y" }}</div></div>
+              <div class="journey-fact"><div class="lbl">Departure</div><div class="val">{{ booking.schedule.departure_time|time:"H:i" }} <small>{{ booking.schedule.arrival_time|time:"H:i" }} arrival</small></div></div>
+              <div class="journey-fact"><div class="lbl">Bus</div><div class="val">{{ booking.schedule.bus.name }}</div></div>
+              <div class="journey-fact"><div class="lbl">Operator</div><div class="val">{{ booking.schedule.bus.operator.name }}</div></div>
+              <div class="journey-fact"><div class="lbl">Seats</div><div class="val">{{ booking.seats_summary }}</div></div>
+              <div class="journey-fact"><div class="lbl">Passengers</div><div class="val">{{ booking.passenger_count }}</div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel mb-3">
+          <div class="panel-head"><h3>Passengers</h3></div>
+          <div class="table-responsive">
+            <table class="dash-table">
+              <thead><tr><th>Seat</th><th>Name</th><th>Age</th><th>Gender</th><th>Contact</th></tr></thead>
+              <tbody>
+                {% for passenger in booking.passengers.all %}
+                  <tr>
+                    <td class="fw-700 text-red">{{ passenger.seat_number }}</td>
+                    <td class="cell-main">{{ passenger.name }}</td>
+                    <td>{{ passenger.age }}</td>
+                    <td>{{ passenger.gender }}</td>
+                    <td>{{ passenger.phone|default:booking.contact_phone }}<div class="cell-sub">{{ passenger.email|default:booking.contact_email }}</div></td>
+                  </tr>
+                {% empty %}
+                  <tr><td colspan="5"><div class="table-empty"><i class="fa-solid fa-users"></i>Passenger details haven't been added yet.</div></td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head"><h3>Payment history</h3></div>
+          <div class="table-responsive">
+            <table class="dash-table">
+              <thead><tr><th>Payment</th><th>Method</th><th>Amount</th><th>Status</th><th>Date</th></tr></thead>
+              <tbody>
+                {% for payment in booking.payments.all %}
+                  <tr>
+                    <td class="booking-id-mono">{{ payment.payment_id }}</td>
+                    <td>{{ payment.get_method_display }}<div class="cell-sub">{{ payment.get_gateway_display }}</div></td>
+                    <td class="fw-600">₹{{ payment.amount|floatformat:2|intcomma }}</td>
+                    <td><span class="status-pill status-{{ payment.status|lower }}">{{ payment.get_status_display }}</span></td>
+                    <td>{{ payment.created_at|date:"d M Y, H:i" }}</td>
+                  </tr>
+                {% empty %}
+                  <tr><td colspan="5"><div class="table-empty"><i class="fa-solid fa-wallet"></i>No payment has been attempted yet.</div></td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <aside>
+        <div class="summary-card">
+          <div class="summary-head">
+            <div><h3>Reservation</h3><div class="fs-13 text-white-70">{{ booking.created_at|date:"d M Y, H:i" }}</div></div>
+            <span class="timer-pill"><i class="fa-regular fa-clock"></i> {% if booking.is_expired %}Expired{% else %}Active{% endif %}</span>
+          </div>
+          <div class="summary-body">
+            {% if booking.status == "PENDING" and not booking.is_expired %}
+              <div class="alert alert-warning fs-13">
+                <i class="fa-solid fa-hourglass-half"></i>
+                Seats held until <strong>{{ booking.expires_at|date:"H:i" }}</strong>. Complete payment before the timer runs out.
+              </div>
+              <a href="{% url 'payments:checkout' booking.booking_id %}" class="btn btn-brand"><i class="fa-solid fa-credit-card"></i> Complete payment</a>
+              <a href="{% url 'bookings:passenger_details' booking.booking_id %}" class="btn btn-outline-navy mt-2"><i class="fa-solid fa-user-pen"></i> Edit passenger details</a>
+            {% elif booking.is_expired or booking.status == "EXPIRED" %}
+              <div class="alert alert-danger fs-13"><i class="fa-solid fa-circle-xmark"></i> This reservation expired and the seats were released.</div>
+              <a href="{% url 'buses:search' %}" class="btn btn-brand"><i class="fa-solid fa-magnifying-glass"></i> Search again</a>
+            {% else %}
+              <a href="{% url 'bookings:ticket' booking.booking_id %}" class="btn btn-brand"><i class="fa-solid fa-ticket"></i> View e-ticket</a>
+            {% endif %}
+
+            <div class="divider"></div>
+            <div class="fare-line"><span>Seat subtotal</span><strong>₹{{ booking.seat_subtotal|floatformat:2|intcomma }}</strong></div>
+            <div class="fare-line"><span>Convenience fee</span><strong>₹{{ booking.convenience_fee|floatformat:2|intcomma }}</strong></div>
+            <div class="fare-line"><span>GST</span><strong>₹{{ booking.gst_amount|floatformat:2|intcomma }}</strong></div>
+            <div class="pay-summary-total">
+              <span>Total</span>
+              <strong>₹{{ booking.total_amount|floatformat:0|intcomma }}</strong>
+            </div>
+
+            <div class="detail-list mt-3">
+              <div class="row-line"><span>Contact</span><span>{{ booking.contact_name }}</span></div>
+              <div class="row-line"><span>Email</span><span>{{ booking.contact_email }}</span></div>
+              <div class="row-line"><span>Phone</span><span>{{ booking.contact_phone }}</span></div>
+            </div>
+
+            <a href="{% url 'bookings:my_bookings' %}" class="btn btn-outline-navy mt-3"><i class="fa-solid fa-arrow-left"></i> Back to bookings</a>
+          </div>
+          <div class="summary-footnote"><i class="fa-solid fa-shield-halved"></i> Booking reference {{ booking.booking_id }}</div>
+        </div>
+      </aside>
+    </div>
+  </div>
+</section>
+{% endblock %}

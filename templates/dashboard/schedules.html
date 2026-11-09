@@ -1,0 +1,100 @@
+{% extends "dashboard/base_dashboard.html" %}
+{% load static humanize %}
+
+{% block title %}Schedules{% endblock %}
+{% block page_title %}Schedules &amp; seat inventory{% endblock %}
+{% block page_sub %}Publish departures, fares and seat layouts for every trip{% endblock %}
+
+{% block content %}
+<div class="dash-page-head">
+  <div>
+    <h1>Departure schedules</h1>
+    <p>{{ page_obj.paginator.count }} schedule{{ page_obj.paginator.count|pluralize }} match this view.</p>
+  </div>
+  <a href="{% url 'dashboard:schedule_add' %}" class="btn btn-brand"><i class="fa-regular fa-calendar-plus"></i> Add schedule</a>
+</div>
+
+<div class="table-card">
+  <div class="table-toolbar">
+    <h3><i class="fa-regular fa-calendar-days text-red"></i> Trip calendar</h3>
+    <form method="get" class="filters">
+      <div class="dash-search">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input type="search" name="q" value="{{ query }}" class="form-control search-input" placeholder="Route, bus or operator">
+      </div>
+      <select name="status" class="form-select" style="min-width:140px;">
+        <option value="">All dates</option>
+        <option value="upcoming" {% if status == 'upcoming' %}selected{% endif %}>Upcoming</option>
+        <option value="past" {% if status == 'past' %}selected{% endif %}>Past</option>
+      </select>
+      <button class="btn btn-outline-navy btn-sm" type="submit">Filter</button>
+      {% if query or status %}<a href="{% url 'dashboard:schedule_list' %}" class="btn btn-outline-navy btn-sm">Reset</a>{% endif %}
+    </form>
+  </div>
+  <div class="table-responsive">
+    <table class="dash-table">
+      <thead>
+        <tr><th>Departure</th><th>Route</th><th>Bus &amp; operator</th><th>Fare</th><th>Occupancy</th><th>Status</th><th class="text-end">Actions</th></tr>
+      </thead>
+      <tbody>
+        {% for schedule in page_obj %}
+          <tr>
+            <td>
+              <div class="cell-main">{{ schedule.travel_date|date:"D, d M Y" }}</div>
+              <div class="cell-sub">{{ schedule.departure_time|time:"H:i" }} → {{ schedule.arrival_time|time:"H:i" }} · {{ schedule.duration_display }}</div>
+            </td>
+            <td>
+              <div class="cell-main">{{ schedule.route.source }} → {{ schedule.route.destination }}</div>
+              <div class="cell-sub">{{ schedule.route.distance_km }} km</div>
+            </td>
+            <td>
+              <div class="cell-main">{{ schedule.bus.name }}</div>
+              <div class="cell-sub">{{ schedule.bus.operator.name }} · {{ schedule.bus.registration_number }}</div>
+            </td>
+            <td class="cell-main">₹{{ schedule.fare|floatformat:0|intcomma }}</td>
+            <td style="min-width:140px;">
+              <div class="d-flex justify-content-between fs-12 mb-1">
+                <span>{{ schedule.available_seat_count }} free</span>
+                <span class="text-muted">{{ schedule.occupancy_percent }}%</span>
+              </div>
+              <div class="occupancy-bar"><span style="width: {{ schedule.occupancy_percent }}%;"></span></div>
+            </td>
+            <td>
+              {% if schedule.is_departed %}<span class="chip">Departed</span>
+              {% elif schedule.is_active %}<span class="status-pill status-confirmed">On sale</span>
+              {% else %}<span class="status-pill status-cancelled">Paused</span>{% endif %}
+            </td>
+            <td>
+              <div class="actions">
+                <a href="{% url 'dashboard:seat_layout' schedule.pk %}" class="icon-action success" title="Seat layout"><i class="fa-solid fa-chair"></i></a>
+                <a href="{% url 'dashboard:schedule_edit' schedule.pk %}" class="icon-action" title="Edit"><i class="fa-solid fa-pen"></i></a>
+                <form method="post" action="{% url 'dashboard:schedule_delete' schedule.pk %}" data-confirm="Delete this schedule? Existing bookings may prevent deletion.">
+                  {% csrf_token %}
+                  <button type="submit" class="icon-action danger" title="Delete"><i class="fa-solid fa-trash"></i></button>
+                </form>
+              </div>
+            </td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="7"><div class="table-empty"><i class="fa-regular fa-calendar-xmark"></i>No schedules found. Create a departure to start selling seats.</div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% if page_obj.paginator.num_pages > 1 %}
+    <div class="table-footer">
+      <span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }} · {{ page_obj.paginator.count }} total</span>
+      <nav>
+        <ul class="pagination pagination-sm mb-0">
+          {% if page_obj.has_previous %}<li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query|urlencode }}{% endif %}{% if status %}&status={{ status }}{% endif %}"><i class="fa-solid fa-chevron-left"></i></a></li>{% else %}<li class="page-item disabled"><span class="page-link"><i class="fa-solid fa-chevron-left"></i></span></li>{% endif %}
+          {% for num in page_obj.paginator.page_range %}
+            {% if num == page_obj.number %}<li class="page-item active"><span class="page-link">{{ num }}</span></li>
+            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}<li class="page-item"><a class="page-link" href="?page={{ num }}{% if query %}&q={{ query|urlencode }}{% endif %}{% if status %}&status={{ status }}{% endif %}">{{ num }}</a></li>{% endif %}
+          {% endfor %}
+          {% if page_obj.has_next %}<li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}{% if query %}&q={{ query|urlencode }}{% endif %}{% if status %}&status={{ status }}{% endif %}"><i class="fa-solid fa-chevron-right"></i></a></li>{% else %}<li class="page-item disabled"><span class="page-link"><i class="fa-solid fa-chevron-right"></i></span></li>{% endif %}
+        </ul>
+      </nav>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

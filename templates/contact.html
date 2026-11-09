@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Contact BUSGO — 24×7 travel support{% endblock %}
+{% block meta_description %}Get in touch with BUSGO travel support. Call, email or send us a message — we reply within 24 hours.{% endblock %}
+
+{% block content %}
+<section class="page-hero">
+  <div class="container-xxl">
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'buses:home' %}">Home</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Contact us</li>
+      </ol>
+    </nav>
+    <h1>We're here to help</h1>
+    <p>Questions about a booking, a refund or a route? Our travel support team is available 24×7.</p>
+    <div class="hero-pills">
+      <span class="pill pill-glass"><i class="fa-solid fa-phone"></i> {{ SITE_PHONE }}</span>
+      <span class="pill pill-glass"><i class="fa-solid fa-envelope"></i> {{ SITE_EMAIL }}</span>
+      <span class="pill pill-glass"><i class="fa-solid fa-clock"></i> Average reply: under 24 hours</span>
+    </div>
+  </div>
+</section>
+
+<section class="section-sm">
+  <div class="container-xxl">
+    <div class="row g-3 mb-4">
+      <div class="col-md-4">
+        <div class="contact-info-card">
+          <div class="ci-icon"><i class="fa-solid fa-phone"></i></div>
+          <h3>Call us</h3>
+          <p class="mb-2">Our helpline is open 24×7 for urgent travel issues.</p>
+          <a href="tel:{{ SITE_PHONE|cut:' ' }}">{{ SITE_PHONE }}</a>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="contact-info-card">
+          <div class="ci-icon"><i class="fa-regular fa-envelope"></i></div>
+          <h3>Email us</h3>
+          <p class="mb-2">For bookings, refunds and partnership enquiries.</p>
+          <a href="mailto:{{ SITE_EMAIL }}">{{ SITE_EMAIL }}</a>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="contact-info-card">
+          <div class="ci-icon"><i class="fa-solid fa-location-dot"></i></div>
+          <h3>Visit us</h3>
+          <p class="mb-2">Our head office is open Monday to Saturday, 9 AM – 7 PM.</p>
+          <p class="fw-600 text-navy mb-0">{{ SITE_ADDRESS }}</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-4">
+      <div class="col-lg-7">
+        <div class="contact-form-card">
+          <span class="eyebrow">Send a message</span>
+          <h2 class="section-title h3">How can we help?</h2>
+          <p class="text-muted fs-14">Fill in the form and our team will get back to you. Include your booking ID if your question is about an existing trip.</p>
+
+          {% if form.non_field_errors %}
+            <div class="alert alert-danger">{{ form.non_field_errors.0 }}</div>
+          {% endif %}
+
+          <form method="post" novalidate>
+            {% csrf_token %}
+            <div class="form-grid">
+              <div>
+                <label class="form-label" for="{{ form.name.id_for_label }}">Full name</label>
+                {{ form.name }}
+                {% if form.name.errors %}<div class="invalid-feedback d-block">{{ form.name.errors.0 }}</div>{% endif %}
+              </div>
+              <div>
+                <label class="form-label" for="{{ form.email.id_for_label }}">Email address</label>
+                {{ form.email }}
+                {% if form.email.errors %}<div class="invalid-feedback d-block">{{ form.email.errors.0 }}</div>{% endif %}
+              </div>
+              <div>
+                <label class="form-label" for="{{ form.phone.id_for_label }}">Phone <span class="text-muted">(optional)</span></label>
+                {{ form.phone }}
+                {% if form.phone.errors %}<div class="invalid-feedback d-block">{{ form.phone.errors.0 }}</div>{% endif %}
+              </div>
+              <div>
+                <label class="form-label" for="{{ form.subject.id_for_label }}">Subject</label>
+                {{ form.subject }}
+                {% if form.subject.errors %}<div class="invalid-feedback d-block">{{ form.subject.errors.0 }}</div>{% endif %}
+              </div>
+              <div class="full">
+                <label class="form-label" for="{{ form.message.id_for_label }}">Message</label>
+                {{ form.message }}
+                {% if form.message.errors %}<div class="invalid-feedback d-block">{{ form.message.errors.0 }}</div>{% endif %}
+              </div>
+            </div>
+            <button type="submit" class="btn btn-brand mt-3"><i class="fa-solid fa-paper-plane"></i> Send message</button>
+          </form>
+        </div>
+      </div>
+
+      <div class="col-lg-5">
+        <div class="panel mb-3" id="faq">
+          <div class="panel-head"><div><h3>Quick answers</h3><p>The questions travellers ask us most.</p></div></div>
+          <div class="panel-body">
+            <div class="accordion faq-accordion" id="faqAccordion">
+              <div class="accordion-item">
+                <h2 class="accordion-header"><button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#faq1" aria-expanded="true" aria-controls="faq1">How do I cancel a booking?</button></h2>
+                <div id="faq1" class="accordion-collapse collapse show" data-bs-parent="#faqAccordion"><div class="accordion-body">Open <a href="{% url 'bookings:my_bookings' %}">My bookings</a>, choose the trip and click “Cancel booking”. Refunds are calculated automatically: 90% if you cancel 24+ hours before departure, 50% between 6 and 24 hours. Cancellations under 6 hours aren't permitted.</div></div>
+              </div>
+              <div class="accordion-item">
+                <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2" aria-expanded="false" aria-controls="faq2">Where is my e-ticket?</button></h2>
+                <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion"><div class="accordion-body">Your QR e-ticket is available instantly after payment on the confirmation page and under <a href="{% url 'bookings:my_bookings' %}">My bookings</a>. You can print it or download a PDF from the ticket page.</div></div>
+              </div>
+              <div class="accordion-item">
+                <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3" aria-expanded="false" aria-controls="faq3">Is my payment secure?</button></h2>
+                <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion"><div class="accordion-body">Yes. Payments are verified server-side. BUSGO never stores card numbers, CVV codes, UPI PINs or OTPs. This demo installation uses a clearly labelled simulated gateway by default.</div></div>
+              </div>
+              <div class="accordion-item">
+                <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq4" aria-expanded="false" aria-controls="faq4">Can I change my seat after booking?</button></h2>
+                <div id="faq4" class="accordion-collapse collapse" data-bs-parent="#faqAccordion"><div class="accordion-body">Seat changes aren't available online. Cancel and rebook if your fare rules allow, or contact support and we'll help where possible.</div></div>
+              </div>
+              <div class="accordion-item">
+                <h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq5" aria-expanded="false" aria-controls="faq5">How early should I reach the boarding point?</button></h2>
+                <div id="faq5" class="accordion-collapse collapse" data-bs-parent="#faqAccordion"><div class="accordion-body">Please arrive at least 15 minutes before departure with a valid photo ID. Buses can't wait beyond the scheduled departure time.</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="auth-note">
+          <i class="fa-solid fa-headset"></i>
+          <span>For urgent issues within 2 hours of departure, please call us directly on <a href="tel:{{ SITE_PHONE|cut:' ' }}">{{ SITE_PHONE }}</a> — it's the fastest way to reach the operations team.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
